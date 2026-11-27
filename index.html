@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IdeaShots — Daily Knowledge Feed</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+      overscroll-behavior-x: none;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .card-hover {
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -8px rgba(17, 24, 39, 0.14);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased bg-[#F6F7F9] text-gray-900 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-200">
+
+  <!-- Top Navigation -->
+  <header class="sticky top-0 z-30 w-full max-w-full overflow-x-hidden bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 transition-colors">
+    <div class="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-3 min-w-0">
+      <!-- Brand -->
+      <div class="flex items-center gap-2.5 shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        </div>
+        <div>
+          <span class="font-extrabold text-lg tracking-tight text-gray-900 dark:text-white">IdeaShots</span>
+          <span class="hidden sm:inline-block ml-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-300">Knowledge Feed</span>
+        </div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="flex-1 max-w-md hidden sm:block">
+        <div class="relative">
+          <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
+          </svg>
+          <input id="searchInput" type="search" placeholder="Search ideas, authors, or topics..." class="w-full pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 border border-transparent rounded-xl focus:bg-white dark:focus:bg-gray-800 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/40 outline-none transition" />
+        </div>
+      </div>
+
+      <!-- Right Actions: Daily Goal + Theme Toggle + Add Idea -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div id="dailyGoalPill" class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 text-xs font-semibold" title="Daily reading goal">
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span id="dailyGoalText">0 / 5 Today</span>
+        </div>
+        <button id="themeToggleBtn" type="button" class="p-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer" title="Toggle dark mode" aria-label="Toggle dark mode">
+          <svg id="sunIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <svg id="moonIcon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+        <button id="openCreateBtn" type="button" class="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          <span>New Idea</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Search -->
+    <div class="sm:hidden px-4 pb-3">
+      <div class="relative">
+        <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
+        </svg>
+        <input id="mobileSearchInput" type="search" placeholder="Search ideas, authors, or topics..." class="w-full pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 border border-transparent rounded-xl focus:bg-white dark:focus:bg-gray-800 focus:border-indigo-400 outline-none" />
+      </div>
+    </div>
+
+    <!-- Sub-Navigation Tabs -->
+    <div class="max-w-6xl mx-auto px-3 sm:px-6 flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800 min-h-[3rem] py-1">
+      <nav class="flex items-center gap-0.5 sm:gap-2 min-w-0" aria-label="Primary Views">
+        <button type="button" data-tab="discover" class="tab-btn px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition cursor-pointer">
+          Discover
+        </button>
+        <button type="button" data-tab="stash" class="tab-btn px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition flex items-center gap-1 sm:gap-1.5 cursor-pointer">
+          <span>My Stash</span>
+          <span id="stashCountBadge" class="px-1.5 py-0.5 text-[11px] rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold">0</span>
+        </button>
+        <button type="button" data-tab="review" class="tab-btn px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition cursor-pointer">
+          Review Deck
+        </button>
+      </nav>
+
+      <div id="sortContainer" class="flex items-center gap-2">
+        <label for="sortSelect" class="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">Sort:</label>
+        <select id="sortSelect" class="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200/70 dark:hover:bg-gray-700 rounded-lg px-2.5 py-1.5 outline-none cursor-pointer">
+          <option value="recommended">Recommended</option>
+          <option value="most-liked">Most Popular</option>
+          <option value="quickest">Quickest Read</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 sm:py-6 min-w-0 overflow-x-hidden">
+    <!-- Topic Filter Bar (visible on Discover & My Stash) -->
+    <section id="topicFilterBar" class="mb-6">
+      <div id="topicPills" class="flex flex-wrap items-center gap-1.5 sm:gap-2 pb-1"></div>
+    </section>
+
+    <!-- Feed Grid View (Discover & My Stash) -->
+    <section id="feedSection">
+      <div id="feedGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+      <div id="emptyState" class="hidden text-center py-16 px-4 bg-white dark:bg-gray-900 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+        </div>
+        <h3 id="emptyTitle" class="text-base font-bold text-gray-900 dark:text-white mb-1">No matching ideas</h3>
+        <p id="emptyDesc" class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-4">Try clearing your search or switching topics to explore more insights.</p>
+        <button id="emptyActionBtn" type="button" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition cursor-pointer">
+          Reset Filters
+        </button>
+      </div>
+    </section>
+
+    <!-- Review Deck View -->
+    <section id="reviewSection" class="hidden max-w-2xl mx-auto">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">Daily Flashcard Review</h2>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Use arrow keys (&larr; / &rarr;) to navigate, <strong>S</strong> to stash, <strong>L</strong> to like.</p>
+        </div>
+        <span id="reviewCounter" class="text-xs font-bold px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300">1 / 12</span>
+      </div>
+
+      <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden mb-6">
+        <div id="reviewProgressBar" class="h-full bg-indigo-600 transition-all duration-300" style="width: 8%"></div>
+      </div>
+
+      <div id="reviewCardHost"></div>
+
+      <div class="flex items-center justify-between gap-3 mt-6">
+        <button id="prevReviewBtn" type="button" class="px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-semibold transition cursor-pointer">
+          &larr; Previous
+        </button>
+        <button id="markReadNextBtn" type="button" class="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition cursor-pointer">
+          Mark Read &amp; Next &rarr;
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Deep-Dive Modal -->
+  <div id="detailModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-800 p-6 relative">
+      <button id="closeDetailModal" type="button" class="absolute top-4 right-4 p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer" aria-label="Close modal">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <div id="detailModalContent"></div>
+    </div>
+  </div>
+
+  <!-- Create New Idea Modal -->
+  <div id="createModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-800 p-6 relative">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">Stash a New Idea</h2>
+        <button id="closeCreateModal" type="button" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer" aria-label="Close modal">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form id="createIdeaForm" class="space-y-4">
+        <div>
+          <label for="ideaTitleInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Idea Headline *</label>
+          <input id="ideaTitleInput" type="text" required maxlength="100" placeholder="e.g., Separate Policy from Enforcement" class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="ideaTopicInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Topic *</label>
+            <select id="ideaTopicInput" class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 dark:text-gray-100 focus:border-indigo-500 outline-none">
+              <option value="Science & Cosmos">Science &amp; Cosmos</option>
+              <option value="History & Society">History &amp; Society</option>
+              <option value="Mind & Psychology">Mind &amp; Psychology</option>
+              <option value="Health & Biology">Health &amp; Biology</option>
+              <option value="Design & Creativity">Design &amp; Creativity</option>
+              <option value="Focus & Habits">Focus &amp; Habits</option>
+              <option value="Finance & Decisions">Finance &amp; Decisions</option>
+              <option value="Philosophy & Stoicism">Philosophy &amp; Stoicism</option>
+              <option value="Systems & Architecture">Systems &amp; Architecture</option>
+              <option value="Cybersecurity & NAC">Cybersecurity &amp; NAC</option>
+            </select>
+          </div>
+          <div>
+            <label for="ideaAuthorInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Source / Author *</label>
+            <input id="ideaAuthorInput" type="text" required maxlength="80" placeholder="e.g., Team Runbook / Book" class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none" />
+          </div>
+        </div>
+        <div>
+          <label for="ideaUrlInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Reference URL (Optional)</label>
+          <input id="ideaUrlInput" type="url" placeholder="https://..." class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none" />
+        </div>
+        <div>
+          <label for="ideaInsightInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Core Insight *</label>
+          <textarea id="ideaInsightInput" required rows="3" maxlength="400" placeholder="Distill the core idea in 2-3 crisp sentences..." class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none resize-none"></textarea>
+        </div>
+        <div>
+          <label for="ideaTakeawayInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">How to Apply *</label>
+          <input id="ideaTakeawayInput" type="text" required maxlength="180" placeholder="One concrete action to take today..." class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none" />
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" id="cancelCreateBtn" class="px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition cursor-pointer">Publish to Feed</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 dark:bg-gray-800 dark:border dark:border-gray-700 text-white text-xs sm:text-sm font-medium shadow-lg">
+    <span id="toastText">Saved</span>
+  </div>
+
+  <script>
+    const TOPIC_META = {
+      'Systems & Architecture': {
+        badge: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/70',
+        tint: 'bg-emerald-50/70 border-emerald-200/70 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800/50 dark:text-emerald-200',
+        accent: 'text-emerald-700 dark:text-emerald-300'
+      },
+      'Cybersecurity & NAC': {
+        badge: 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-800/70',
+        tint: 'bg-cyan-50/70 border-cyan-200/70 text-cyan-900 dark:bg-cyan-950/40 dark:border-cyan-800/50 dark:text-cyan-200',
+        accent: 'text-cyan-700 dark:text-cyan-300'
+      },
+      'Focus & Habits': {
+        badge: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/70',
+        tint: 'bg-amber-50/70 border-amber-200/70 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800/50 dark:text-amber-200',
+        accent: 'text-amber-800 dark:text-amber-300'
+      },
+      'Finance & Decisions': {
+        badge: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/70',
+        tint: 'bg-rose-50/70 border-rose-200/70 text-rose-900 dark:bg-rose-950/40 dark:border-rose-800/50 dark:text-rose-200',
+        accent: 'text-rose-700 dark:text-rose-300'
+      },
+      'Philosophy & Stoicism': {
+        badge: 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/60 dark:text-violet-300 dark:border-violet-800/70',
+        tint: 'bg-violet-50/70 border-violet-200/70 text-violet-900 dark:bg-violet-950/40 dark:border-violet-800/50 dark:text-violet-200',
+        accent: 'text-violet-700 dark:text-violet-300'
+      },
+      'Science & Cosmos': {
+        badge: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800/70',
+        tint: 'bg-sky-50/70 border-sky-200/70 text-sky-900 dark:bg-sky-950/40 dark:border-sky-800/50 dark:text-sky-200',
+        accent: 'text-sky-700 dark:text-sky-300'
+      },
+      'History & Society': {
+        badge: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-800/70',
+        tint: 'bg-orange-50/70 border-orange-200/70 text-orange-900 dark:bg-orange-950/40 dark:border-orange-800/50 dark:text-orange-200',
+        accent: 'text-orange-700 dark:text-orange-300'
+      },
+      'Mind & Psychology': {
+        badge: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 dark:bg-fuchsia-950/60 dark:text-fuchsia-300 dark:border-fuchsia-800/70',
+        tint: 'bg-fuchsia-50/70 border-fuchsia-200/70 text-fuchsia-900 dark:bg-fuchsia-950/40 dark:border-fuchsia-800/50 dark:text-fuchsia-200',
+        accent: 'text-fuchsia-700 dark:text-fuchsia-300'
+      },
+      'Health & Biology': {
+        badge: 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800/70',
+        tint: 'bg-teal-50/70 border-teal-200/70 text-teal-900 dark:bg-teal-950/40 dark:border-teal-800/50 dark:text-teal-200',
+        accent: 'text-teal-700 dark:text-teal-300'
+      },
+      'Design & Creativity': {
+        badge: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/70',
+        tint: 'bg-indigo-50/70 border-indigo-200/70 text-indigo-900 dark:bg-indigo-950/40 dark:border-indigo-800/50 dark:text-indigo-200',
+        accent: 'text-indigo-700 dark:text-indigo-300'
+      }
+    };
+
+    const INITIAL_IDEAS = [
+      {
+        id: 'sci-1',
+        topic: 'Science & Cosmos',
+        title: 'Earth Is a Tiny Speck Suspended in a Sunbeam',
+        insight: 'Photographed by Voyager 1 from roughly 6 billion kilometers away, Earth appears smaller than a single pixel—challenging human illusions of cosmic centrality and reminding us we share one fragile home.',
+        takeaway: 'Zoom out to cosmic scale whenever daily status games or trivial disagreements feel overwhelming.',
+        bullets: [
+          'Voyager 1 turned its camera back toward Earth on February 14, 1990 at Carl Sagan’s urging.',
+          'Earth’s pale blue hue comes from Rayleigh scattering of sunlight in our atmosphere.',
+          'There is no nearby refuge to migrate to—preserving Earth and treating one another kindly is our shared responsibility.'
+        ],
+        sourceTitle: 'Pale Blue Dot',
+        author: 'Carl Sagan',
+        sourceUrl: 'https://en.wikipedia.org/wiki/Pale_Blue_Dot',
+        readMinutes: 2,
+        likes: 289,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'psy-1',
+        topic: 'Mind & Psychology',
+        title: 'System 1 Runs on Autopilot; System 2 Does the Math',
+        insight: 'Your brain operates with two modes: System 1 is fast, intuitive, and automatic, while System 2 is slow, deliberate, and effortful. Most cognitive biases happen when System 1 answers a hard question quickly.',
+        takeaway: 'When stakes are high or numbers feel intuitive, pause for 30 seconds to let System 2 verify the logic.',
+        bullets: [
+          'System 1 excels at pattern recognition and snap judgments—but falls for framing and anchoring.',
+          'System 2 requires conscious effort and easily fatigues under time pressure.',
+          'Better decisions come from designing checklists and pauses that trigger System 2 before committing.'
+        ],
+        sourceTitle: 'Thinking, Fast and Slow',
+        author: 'Daniel Kahneman',
+        sourceUrl: 'https://www.sparknotes.com/lit/thinking-fast-and-slow/',
+        readMinutes: 2,
+        likes: 247,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'his-1',
+        topic: 'History & Society',
+        title: 'Shared Myths Enabled Large-Scale Human Cooperation',
+        insight: 'Unlike other animals, Homo sapiens can cooperate flexibly in groups of millions because we invent and believe shared stories—nations, laws, money, and human rights—that exist in collective imagination.',
+        takeaway: 'To understand how any large institution behaves, examine the shared narratives and incentives holding it together.',
+        bullets: [
+          'The Cognitive Revolution (~70,000 years ago) unlocked abstract language and shared fiction.',
+          'Money and legal corporations are powerful intersubjective realities built on mutual trust.',
+          'History’s turning points—Cognitive, Agricultural, and Scientific—each reshaped how humans organize.'
+        ],
+        sourceTitle: 'Sapiens: A Brief History of Humankind',
+        author: 'Yuval Noah Harari',
+        sourceUrl: 'https://en.wikipedia.org/wiki/Sapiens:_A_Brief_History_of_Humankind',
+        readMinutes: 2,
+        likes: 231,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'bio-1',
+        topic: 'Health & Biology',
+        title: 'Sleeping Under 7 Hours Quietly Compounds Health Risk',
+        insight: 'Sleep is not passive downtime—it is an active biological maintenance cycle. Regularly getting less than 7 hours impairs memory consolidation, weakens immunity, and elevates long-term cardiovascular risk.',
+        takeaway: 'Protect a consistent 7–8 hour sleep window by setting a wind-down alarm 45 minutes before bed.',
+        bullets: [
+          'Deep NREM sleep transfers fragile short-term memories into long-term cortical storage.',
+          'REM sleep supports emotional regulation and creative problem-solving.',
+          'Consistent wake and sleep times anchor your circadian rhythm better than weekend catch-up sleep.'
+        ],
+        sourceTitle: 'Why We Sleep',
+        author: 'Matthew Walker',
+        sourceUrl: 'https://grahammann.net/book-notes/why-we-sleep-matthew-walker',
+        readMinutes: 2,
+        likes: 254,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'des-1',
+        topic: 'Design & Creativity',
+        title: 'Visibility, Affordances & Feedback Beat User Manuals',
+        insight: 'When people struggle with a door, switch, or app, it is usually a design failure—not human error. Intuitive products make available actions visible, map controls naturally, and give immediate feedback.',
+        takeaway: 'If someone needs instructions to use something you built, add clearer visual cues and instant feedback.',
+        bullets: [
+          'Affordances show what actions are possible (e.g., a flat plate signals "push", a handle signals "pull").',
+          'Natural mapping aligns controls with their physical or spatial effects.',
+          'Immediate feedback confirms every action was registered, preventing double-clicks and confusion.'
+        ],
+        sourceTitle: 'The Design of Everyday Things',
+        author: 'Don Norman',
+        sourceUrl: 'https://medium.com/@sachinrekhi/don-normans-principles-of-interaction-design-51025a2c0f33',
+        readMinutes: 2,
+        likes: 198,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'psy-2',
+        topic: 'Mind & Psychology',
+        title: 'Six Universal Shortcuts Drive Human Persuasion',
+        insight: 'Because decision-making is effortful, humans rely on predictable mental shortcuts: reciprocity, scarcity, authority, commitment & consistency, liking, and social proof.',
+        takeaway: 'Spot these six triggers in ads and negotiations—ask yourself if you want the item or are just reacting to scarcity.',
+        bullets: [
+          'Reciprocity: We feel compelled to return favors, even small unsolicited ones.',
+          'Social Proof: Under uncertainty, we look to what peers are doing.',
+          'Commitment & Consistency: Small initial agreements make larger follow-up requests far easier to accept.'
+        ],
+        sourceTitle: 'Influence: The Psychology of Persuasion',
+        author: 'Robert Cialdini',
+        sourceUrl: 'https://people-shift.com/articles/cialdinis-6-principles-of-persuasion/',
+        readMinutes: 2,
+        likes: 212,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sci-2',
+        topic: 'Science & Cosmos',
+        title: 'Extraordinary Claims Require Extraordinary Evidence',
+        insight: 'Scientific thinking is a baloney-detection toolkit: stay open to wonder and new ideas, but demand proportional, reproducible evidence before accepting sweeping claims.',
+        takeaway: 'When reading a dramatic headline, check the sample size, control group, and whether independent teams replicated it.',
+        bullets: [
+          'Skepticism and wonder are partners, not opposites.',
+          'Test rival hypotheses rather than cherry-picking confirming anecdotes.',
+          'Correlations in small datasets frequently vanish under rigorous replication.'
+        ],
+        sourceTitle: 'Carl Sagan & Critical Thinking',
+        author: 'Carl Sagan',
+        sourceUrl: 'https://en.wikipedia.org/wiki/Carl_Sagan',
+        readMinutes: 1,
+        likes: 226,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sci-3',
+        topic: 'Science & Cosmos',
+        title: 'Most of History Happened Before Written Records',
+        insight: 'Science is not a dry list of formulas—it is a detective story of curious humans piecing together deep time, plate tectonics, atoms, and evolution from faint clues left in rocks and starlight.',
+        takeaway: 'Pick one everyday phenomenon—like why ice floats or how GPS corrects for relativity—and trace the discovery story behind it.',
+        bullets: [
+          'Nearly every atom in your body was forged inside ancient stars.',
+          'Major breakthroughs often came from amateurs and outsiders asking simple questions.',
+          'Understanding how we know something makes scientific facts far more memorable.'
+        ],
+        sourceTitle: 'A Short History of Nearly Everything',
+        author: 'Bill Bryson',
+        sourceUrl: 'https://www.supersummary.com/a-short-history-of-nearly-everything/summary/',
+        readMinutes: 2,
+        likes: 187,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sys-1',
+        topic: 'Systems & Architecture',
+        title: 'Structure Drives Behavior More Than People',
+        insight: 'Most recurring organizational or technical failures stem from system structure—stocks, feedback loops, and time delays—rather than bad luck or individual mistakes.',
+        takeaway: 'When an incident repeats, map the feedback loops and delays before blaming an operator.',
+        bullets: [
+          'A system’s real purpose is revealed by its actual outcomes, not its stated mission.',
+          'Stocks create inertia; changes rarely take effect instantaneously.',
+          'Time delays between action and feedback often trigger overcorrection and oscillation.'
+        ],
+        sourceTitle: 'Thinking in Systems: A Primer',
+        author: 'Donella H. Meadows',
+        sourceUrl: 'https://businessbookclub.substack.com/p/thinking-in-systems-summary',
+        readMinutes: 2,
+        likes: 148,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sec-1',
+        topic: 'Cybersecurity & NAC',
+        title: 'Zero Trust Eliminates Implicit Location Trust',
+        insight: 'Under NIST SP 800-207, users and devices receive no implicit trust solely because they sit on an internal network or are organization-owned. Every session requires explicit verification.',
+        takeaway: 'Treat internal VLANs as untrusted by default and authenticate device posture before granting resource access.',
+        bullets: [
+          'All data sources and computing services are treated as discrete resources.',
+          'Access to individual enterprise resources is granted on a per-session basis.',
+          'Policy decisions incorporate dynamic device posture, identity, and behavioral context.'
+        ],
+        sourceTitle: 'NIST SP 800-207: Zero Trust Architecture',
+        author: 'NIST',
+        sourceUrl: 'https://csrc.nist.gov/pubs/sp/800/207/final',
+        readMinutes: 2,
+        likes: 192,
+        liked: false,
+        stashed: true,
+        read: false,
+        note: 'Aligns directly with post-connect NAC posture checks before VLAN or firewall enforcement.'
+      },
+      {
+        id: 'foc-1',
+        topic: 'Focus & Habits',
+        title: 'Deep Work Produces Rare, Hard-to-Replicate Value',
+        insight: 'Distraction-free concentration pushes cognitive capabilities to their limit. It is the core engine for quickly mastering hard technical skills and producing elite-level output.',
+        takeaway: 'Block an uninterrupted 90-minute morning window with chat and email completely closed.',
+        bullets: [
+          'Two core skills dominate modern technical work: learning hard things fast and producing at high quality.',
+          'Routines and rituals beat willpower when starting a deep session.',
+          'Track deep-work hours on a visible scoreboard to reinforce consistency.'
+        ],
+        sourceTitle: 'Deep Work',
+        author: 'Cal Newport',
+        sourceUrl: 'https://medium.com/@RationalBadger/my-7-takeaways-from-deep-work-by-cal-newport-76995619178c',
+        readMinutes: 2,
+        likes: 215,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sys-2',
+        topic: 'Systems & Architecture',
+        title: 'Intervene at Leverage Points, Not Just Parameters',
+        insight: 'Tweaking surface parameters (like buffer sizes or thresholds) is the weakest way to change a system. Changing information flows, rules, or underlying paradigms yields orders of magnitude more impact.',
+        takeaway: 'Before tuning a threshold, ask whether giving operators real-time visibility would solve the root cause.',
+        bullets: [
+          'Parameters and numbers sit near the bottom of the leverage hierarchy.',
+          'Adding or restoring feedback loops is a high-leverage, low-cost intervention.',
+          'The highest leverage point is questioning and shifting the system’s core paradigm.'
+        ],
+        sourceTitle: 'Leverage Points: Places to Intervene in a System',
+        author: 'Donella H. Meadows',
+        sourceUrl: 'https://donellameadows.org/archives/leverage-points-places-to-intervene-in-a-system/',
+        readMinutes: 2,
+        likes: 164,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sec-2',
+        topic: 'Cybersecurity & NAC',
+        title: 'The Seven Tenets of Dynamic Access Control',
+        insight: 'Zero Trust is not a single appliance—it is a continuous loop of asset monitoring, dynamic policy evaluation, and telemetry collection to sharpen security posture over time.',
+        takeaway: 'Pair continuous endpoint posture monitoring with automated policy enforcement and telemetry feedback.',
+        bullets: [
+          'Secure all communication regardless of network location.',
+          'Monitor and measure the integrity and security posture of all owned and associated assets.',
+          'Collect as much information as possible about assets, network infrastructure, and communications.'
+        ],
+        sourceTitle: 'NIST SP 800-207 Explained',
+        author: 'Portnox Security Guide',
+        sourceUrl: 'https://www.portnox.com/cybersecurity-101/zero-trust/nist-800-207-explained-zero-trust-architecture-and-where-network-access-control-fits/',
+        readMinutes: 1,
+        likes: 129,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sys-3',
+        topic: 'Systems & Architecture',
+        title: 'Optimize for Maintainability & Evolvability',
+        insight: 'Most software and infrastructure costs happen after initial deployment. Operability, simplicity, and evolvability matter far more over a system’s lifetime than clever initial shortcuts.',
+        takeaway: 'Document upgrade paths and rollback steps cleanly so future changes remain low-risk.',
+        bullets: [
+          'Good abstractions hide complexity without obscuring critical failure modes.',
+          'Operability means making routine tasks easy for engineering and ops teams.',
+          'Plan for schema and configuration evolution from day one.'
+        ],
+        sourceTitle: 'Designing Data-Intensive Applications',
+        author: 'Martin Kleppmann',
+        sourceUrl: 'https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/',
+        readMinutes: 2,
+        likes: 176,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sys-4',
+        topic: 'Systems & Architecture',
+        title: 'The Three Ways: Flow, Feedback, Experimentation',
+        insight: 'High-performing IT teams optimize left-to-right flow, amplify right-to-left feedback loops so defects are caught early, and foster a culture of continual learning.',
+        takeaway: 'Never pass a known defect or undocumented workaround downstream; shorten the feedback loop instead.',
+        bullets: [
+          'First Way: Focus on fast, smooth flow of work from engineering to operations.',
+          'Second Way: Amplify feedback loops so problems are surfaced and fixed at the source.',
+          'Third Way: Institutionalize blameless postmortems and deliberate practice.'
+        ],
+        sourceTitle: 'The Three Ways of DevOps',
+        author: 'Gene Kim',
+        sourceUrl: 'https://itrevolution.com/articles/the-three-ways-principles-underpinning-devops/',
+        readMinutes: 1,
+        likes: 141,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'foc-2',
+        topic: 'Focus & Habits',
+        title: 'Take Breaks from Focus, Not from Distraction',
+        insight: 'Checking your phone every time you feel bored trains your brain to crave constant novelty, destroying your stamina for deep problem-solving.',
+        takeaway: 'Schedule specific times to check messages; outside those windows, sit with boredom instead of reaching for a feed.',
+        bullets: [
+          'Constant context-switching leaves "attention residue" that degrades cognitive performance.',
+          'Embracing boredom in queues or commutes rebuilds your concentration muscle.',
+          'Drain shallow work by batching administrative tasks into fixed afternoon blocks.'
+        ],
+        sourceTitle: 'Deep Work',
+        author: 'Cal Newport',
+        sourceUrl: 'https://medium.com/@RationalBadger/my-7-takeaways-from-deep-work-by-cal-newport-76995619178c',
+        readMinutes: 1,
+        likes: 184,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'foc-3',
+        topic: 'Focus & Habits',
+        title: 'Tiny 1% Habits Compound via Four Laws',
+        insight: 'Lasting habits rarely come from massive bursts of motivation. Small 1% improvements compound over time when you make good behaviors obvious, attractive, easy, and satisfying.',
+        takeaway: 'Reduce friction to two minutes—set up your workspace the night before so starting is effortless.',
+        bullets: [
+          'Make it obvious: design visual cues in your environment.',
+          'Make it easy: lower the activation energy required to begin.',
+          'Invert the Four Laws to break bad habits (make them invisible and difficult).'
+        ],
+        sourceTitle: 'Atomic Habits Summary',
+        author: 'James Clear',
+        sourceUrl: 'https://jamesclear.com/atomic-habits-summary',
+        readMinutes: 2,
+        likes: 263,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'fin-1',
+        topic: 'Finance & Decisions',
+        title: 'Behavior Beats Pure Financial Knowledge',
+        insight: 'Financial outcomes are governed less by spreadsheet intelligence and more by how you behave under uncertainty—managing ego, fear, and patience over decades.',
+        takeaway: 'Build a personal margin of safety so you are never forced to sell or react during a downturn.',
+        bullets: [
+          'How you behave under stress matters more than what you know in calm markets.',
+          'Leave room for error in every financial plan—volatility is a fee, not a fine.',
+          'Avoid comparing your strategy to people playing a completely different time-horizon game.'
+        ],
+        sourceTitle: 'The Psychology of Money',
+        author: 'Morgan Housel',
+        sourceUrl: 'https://www.sloww.co/psychology-of-money-book/',
+        readMinutes: 2,
+        likes: 208,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'fin-2',
+        topic: 'Finance & Decisions',
+        title: 'Define "Enough" and Value Time Autonomy',
+        insight: 'The highest dividend money pays is control over your time. Without a clear definition of "enough," lifestyle creep silently erodes your freedom.',
+        takeaway: 'Benchmark major purchases against the hours of personal autonomy they cost, not just their sticker price.',
+        bullets: [
+          'Wealth is what you don’t see—unspent savings that buy future options.',
+          'Resist moving the goalposts once your core needs and security are covered.',
+          'Time autonomy consistently outperforms material upgrades for long-term satisfaction.'
+        ],
+        sourceTitle: 'The Psychology of Money',
+        author: 'Morgan Housel',
+        sourceUrl: 'https://www.affiancefinancial.com/news/morgan-housels-psychology-of-money',
+        readMinutes: 1,
+        likes: 175,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'phi-1',
+        topic: 'Philosophy & Stoicism',
+        title: 'Govern the Rational Mind & Accept What You Cannot Control',
+        insight: 'External events cannot harm your character unless you let them distort your judgment. Focus your energy on sober decision-making, honesty, and cheerfulness in the face of obstacles.',
+        takeaway: 'Separate any frustrating situation into two columns: what you control (your response) and what you do not.',
+        bullets: [
+          'Value reason above petty distractions and reactive outrage.',
+          'Make sober decisions and commit firmly to the chosen course.',
+          'Accept change and imperfection in others without losing your own composure.'
+        ],
+        sourceTitle: 'Meditations',
+        author: 'Marcus Aurelius',
+        sourceUrl: 'https://dailystoic.com/meditations-marcus-aurelius/',
+        readMinutes: 2,
+        likes: 234,
+        liked: false,
+        stashed: true,
+        read: false,
+        note: ''
+      }
+    ];
+
+    const STORAGE_KEY = 'ideastash_state_v2';
+
+    let state = {
+      ideas: structuredClone(INITIAL_IDEAS),
+      activeTab: 'discover',
+      activeTopic: 'All',
+      searchQuery: '',
+      sortBy: 'recommended',
+      reviewIndex: 0,
+      dailyGoal: 5
+    };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed.ideas) && parsed.ideas.length > 0) {
+          state.ideas = parsed.ideas;
+        }
+      } catch (e) {
+        // Ignore storage errors in restricted environments
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ideas: state.ideas }));
+      } catch (e) {
+        // Ignore storage errors
+      }
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toastText');
+      toastText.textContent = msg;
+      toast.classList.remove('hidden');
+      toast.classList.add('flex');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('flex');
+      }, 2200);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getFilteredIdeas() {
+      let list = state.ideas.slice();
+      if (state.activeTab === 'stash') {
+        list = list.filter(i => i.stashed);
+      }
+      if (state.activeTopic !== 'All') {
+        list = list.filter(i => i.topic === state.activeTopic);
+      }
+      const q = state.searchQuery.trim().toLowerCase();
+      if (q) {
+        list = list.filter(i =>
+          i.title.toLowerCase().includes(q) ||
+          i.insight.toLowerCase().includes(q) ||
+          i.takeaway.toLowerCase().includes(q) ||
+          i.author.toLowerCase().includes(q) ||
+          i.sourceTitle.toLowerCase().includes(q) ||
+          i.topic.toLowerCase().includes(q)
+        );
+      }
+      if (state.sortBy === 'most-liked') {
+        list.sort((a, b) => b.likes - a.likes);
+      } else if (state.sortBy === 'quickest') {
+        list.sort((a, b) => a.readMinutes - b.readMinutes);
+      }
+      return list;
+    }
+
+    function updateHeaderMetrics() {
+      const stashedCount = state.ideas.filter(i => i.stashed).length;
+      document.getElementById('stashCountBadge').textContent = String(stashedCount);
+
+      const readCount = state.ideas.filter(i => i.read).length;
+      const goalText = document.getElementById('dailyGoalText');
+      const goalPill = document.getElementById('dailyGoalPill');
+      goalText.textContent = `${readCount} / ${state.dailyGoal} Read`;
+      if (readCount >= state.dailyGoal) {
+        goalPill.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold';
+      } else {
+        goalPill.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 text-xs font-semibold';
+      }
+    }
+
+    function renderTabs() {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.dataset.tab === state.activeTab;
+        if (isActive) {
+          btn.classList.add('bg-indigo-50', 'text-indigo-700', 'dark:bg-indigo-950/70', 'dark:text-indigo-300');
+          btn.classList.remove('text-gray-600', 'hover:bg-gray-100', 'dark:text-gray-300', 'dark:hover:bg-gray-800');
+        } else {
+          btn.classList.remove('bg-indigo-50', 'text-indigo-700', 'dark:bg-indigo-950/70', 'dark:text-indigo-300');
+          btn.classList.add('text-gray-600', 'hover:bg-gray-100', 'dark:text-gray-300', 'dark:hover:bg-gray-800');
+        }
+      });
+
+      const isReview = state.activeTab === 'review';
+      document.getElementById('topicFilterBar').classList.toggle('hidden', isReview);
+      document.getElementById('sortContainer').classList.toggle('hidden', isReview);
+      document.getElementById('feedSection').classList.toggle('hidden', isReview);
+      document.getElementById('reviewSection').classList.toggle('hidden', !isReview);
+    }
+
+    function renderTopics() {
+      const topics = ['All', ...Object.keys(TOPIC_META)];
+      const host = document.getElementById('topicPills');
+      host.innerHTML = topics.map(topic => {
+        const active = state.activeTopic === topic;
+        const cls = active
+          ? 'bg-gray-900 text-white border-gray-900 dark:bg-indigo-600 dark:border-indigo-600 shadow-xs'
+          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:text-white';
+        return `<button type="button" data-topic="${escapeHtml(topic)}" class="topic-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition cursor-pointer ${cls}">${escapeHtml(topic)}</button>`;
+      }).join('');
+    }
+
+    function buildCardHtml(idea) {
+      const meta = TOPIC_META[idea.topic] || TOPIC_META['Systems & Architecture'];
+      const likeCls = idea.liked ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800/70' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border-transparent';
+      const stashCls = idea.stashed ? 'text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800/70' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border-transparent';
+      const sourceLink = idea.sourceUrl
+        ? `<a href="${escapeHtml(idea.sourceUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline truncate max-w-full">
+             <span class="truncate">${escapeHtml(idea.sourceTitle)}</span>
+             <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+           </a>`
+        : `<span class="text-xs font-medium text-gray-500 truncate">${escapeHtml(idea.sourceTitle)}</span>`;
+
+      return `
+        <article data-id="${escapeHtml(idea.id)}" class="idea-card card-hover min-w-0 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 dark:hover:border-gray-700 p-4 sm:p-5 flex flex-col justify-between cursor-pointer break-words">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border ${meta.badge}">${escapeHtml(idea.topic)}</span>
+              <div class="flex items-center gap-2 text-[11px] font-medium text-gray-400">
+                ${idea.read ? '<span class="text-emerald-600 font-semibold">&#10003; Read</span>' : ''}
+                <span>${idea.readMinutes} min</span>
+              </div>
+            </div>
+
+            <h3 class="text-base font-bold text-gray-900 dark:text-white leading-snug mb-2">${escapeHtml(idea.title)}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-4">${escapeHtml(idea.insight)}</p>
+
+            <div class="rounded-xl border p-3 mb-4 ${meta.tint}">
+              <div class="text-[11px] font-bold uppercase tracking-wider mb-1 opacity-80">Apply It</div>
+              <p class="text-xs font-medium leading-relaxed">${escapeHtml(idea.takeaway)}</p>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-gray-100 dark:border-gray-800">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div class="min-w-0">
+                ${sourceLink}
+                <div class="text-[11px] text-gray-400 truncate">by ${escapeHtml(idea.author)}</div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-1.5">
+              <div class="flex items-center gap-1.5">
+                <button type="button" data-action="like" data-id="${escapeHtml(idea.id)}" class="action-btn inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition cursor-pointer ${likeCls}">
+                  <svg class="w-3.5 h-3.5" fill="${idea.liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  <span>${idea.likes}</span>
+                </button>
+                <button type="button" data-action="stash" data-id="${escapeHtml(idea.id)}" class="action-btn inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition cursor-pointer ${stashCls}">
+                  <svg class="w-3.5 h-3.5" fill="${idea.stashed ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                  <span>${idea.stashed ? 'Stashed' : 'Stash'}</span>
+                </button>
+              </div>
+              <button type="button" data-action="copy" data-id="${escapeHtml(idea.id)}" class="action-btn p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer" title="Copy insight">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderFeed() {
+      const list = getFilteredIdeas();
+      const grid = document.getElementById('feedGrid');
+      const empty = document.getElementById('emptyState');
+
+      if (list.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        if (state.activeTab === 'stash' && !state.searchQuery && state.activeTopic === 'All') {
+          document.getElementById('emptyTitle').textContent = 'Your Stash is empty';
+          document.getElementById('emptyDesc').textContent = 'Bookmark ideas from Discover to build your personal knowledge library.';
+          document.getElementById('emptyActionBtn').textContent = 'Browse Discover';
+        } else {
+          document.getElementById('emptyTitle').textContent = 'No matching ideas';
+          document.getElementById('emptyDesc').textContent = 'Try clearing your search or switching topics to explore more insights.';
+          document.getElementById('emptyActionBtn').textContent = 'Reset Filters';
+        }
+        return;
+      }
+
+      empty.classList.add('hidden');
+      grid.innerHTML = list.map(buildCardHtml).join('');
+    }
+
+    function renderReviewDeck() {
+      const total = state.ideas.length;
+      if (total === 0) return;
+      if (state.reviewIndex >= total) state.reviewIndex = 0;
+      if (state.reviewIndex < 0) state.reviewIndex = total - 1;
+
+      const idea = state.ideas[state.reviewIndex];
+      const meta = TOPIC_META[idea.topic] || TOPIC_META['Systems & Architecture'];
+      document.getElementById('reviewCounter').textContent = `${state.reviewIndex + 1} / ${total}`;
+      document.getElementById('reviewProgressBar').style.width = `${Math.round(((state.reviewIndex + 1) / total) * 100)}%`;
+
+      const likeCls = idea.liked ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800/70' : 'text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700';
+      const stashCls = idea.stashed ? 'text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800/70' : 'text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700';
+
+      document.getElementById('reviewCardHost').innerHTML = `
+        <div class="min-w-0 bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm p-5 sm:p-8 break-words">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <span class="px-3 py-1 rounded-full text-xs font-bold border ${meta.badge}">${escapeHtml(idea.topic)}</span>
+            <span class="text-xs font-medium text-gray-400">${idea.read ? '&#10003; Completed' : `${idea.readMinutes} min read`}</span>
+          </div>
+          <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white leading-tight mb-3">${escapeHtml(idea.title)}</h3>
+          <p class="text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-5">${escapeHtml(idea.insight)}</p>
+
+          <ul class="space-y-2 mb-5">
+            ${(idea.bullets || []).map(b => `
+              <li class="flex items-start gap-2.5 text-sm text-gray-600 dark:text-gray-300">
+                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0"></span>
+                <span>${escapeHtml(b)}</span>
+              </li>
+            `).join('')}
+          </ul>
+
+          <div class="rounded-2xl border p-4 mb-6 ${meta.tint}">
+            <div class="text-xs font-bold uppercase tracking-wider mb-1 opacity-80">Actionable Takeaway</div>
+            <p class="text-sm font-semibold leading-relaxed">${escapeHtml(idea.takeaway)}</p>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <div class="text-xs text-gray-500">
+              Source: ${idea.sourceUrl ? `<a href="${escapeHtml(idea.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-600 hover:underline">${escapeHtml(idea.sourceTitle)}</a>` : `<span class="font-semibold">${escapeHtml(idea.sourceTitle)}</span>`} — ${escapeHtml(idea.author)}
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" data-action="like" data-id="${escapeHtml(idea.id)}" class="action-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${likeCls}">
+                <svg class="w-4 h-4" fill="${idea.liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                <span>${idea.likes}</span>
+              </button>
+              <button type="button" data-action="stash" data-id="${escapeHtml(idea.id)}" class="action-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${stashCls}">
+                <svg class="w-4 h-4" fill="${idea.stashed ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                <span>${idea.stashed ? 'Stashed' : 'Stash'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openDetailModal(id) {
+      const idea = state.ideas.find(i => i.id === id);
+      if (!idea) return;
+      if (!idea.read) {
+        idea.read = true;
+        saveState();
+        updateHeaderMetrics();
+        renderFeed();
+      }
+      const meta = TOPIC_META[idea.topic] || TOPIC_META['Systems & Architecture'];
+      const modal = document.getElementById('detailModal');
+      const content = document.getElementById('detailModalContent');
+
+      content.innerHTML = `
+        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border mb-3 ${meta.badge}">${escapeHtml(idea.topic)}</span>
+        <h2 class="text-xl font-extrabold text-gray-900 dark:text-white leading-snug mb-3 pr-8">${escapeHtml(idea.title)}</h2>
+        <p class="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-5">${escapeHtml(idea.insight)}</p>
+
+        ${(idea.bullets && idea.bullets.length) ? `
+          <div class="mb-5">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Key Points</h4>
+            <ul class="space-y-2">
+              ${idea.bullets.map(b => `
+                <li class="flex items-start gap-2.5 text-sm text-gray-700 dark:text-gray-300">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0"></span>
+                  <span>${escapeHtml(b)}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        <div class="rounded-xl border p-4 mb-5 ${meta.tint}">
+          <div class="text-xs font-bold uppercase tracking-wider mb-1 opacity-80">How to Apply</div>
+          <p class="text-sm font-semibold">${escapeHtml(idea.takeaway)}</p>
+        </div>
+
+        <div class="mb-5">
+          <label for="detailNoteInput" class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Your Personal Note</label>
+          <textarea id="detailNoteInput" rows="3" placeholder="Jot down how this applies to your current project..." class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none resize-none">${escapeHtml(idea.note || '')}</textarea>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+          <div class="text-xs text-gray-500">
+            ${idea.sourceUrl ? `<a href="${escapeHtml(idea.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-600 hover:underline">${escapeHtml(idea.sourceTitle)} &nearr;</a>` : `<span class="font-semibold">${escapeHtml(idea.sourceTitle)}</span>`}
+            <span> &middot; ${escapeHtml(idea.author)}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" id="modalStashBtn" class="px-3.5 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${idea.stashed ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'}">
+              ${idea.stashed ? 'Stashed in Library' : 'Save to Stash'}
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('detailNoteInput').addEventListener('input', e => {
+        idea.note = e.target.value;
+        saveState();
+      });
+
+      document.getElementById('modalStashBtn').addEventListener('click', () => {
+        toggleStash(idea.id);
+        openDetailModal(idea.id);
+      });
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeDetailModal() {
+      const modal = document.getElementById('detailModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function toggleLike(id) {
+      const idea = state.ideas.find(i => i.id === id);
+      if (!idea) return;
+      idea.liked = !idea.liked;
+      idea.likes += idea.liked ? 1 : -1;
+      saveState();
+      renderAll();
+    }
+
+    function toggleStash(id) {
+      const idea = state.ideas.find(i => i.id === id);
+      if (!idea) return;
+      idea.stashed = !idea.stashed;
+      saveState();
+      showToast(idea.stashed ? 'Saved to My Stash' : 'Removed from My Stash');
+      renderAll();
+    }
+
+    function copyIdea(id) {
+      const idea = state.ideas.find(i => i.id === id);
+      if (!idea) return;
+      const text = `${idea.title}\n${idea.insight}\nTakeaway: ${idea.takeaway} (${idea.sourceTitle} — ${idea.author})`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => showToast('Insight copied')).catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast('Insight copied');
+      } catch (e) {
+        showToast('Could not copy');
+      }
+      document.body.removeChild(ta);
+    }
+
+    function renderAll() {
+      updateHeaderMetrics();
+      renderTabs();
+      renderTopics();
+      renderFeed();
+      if (state.activeTab === 'review') {
+        renderReviewDeck();
+      }
+    }
+
+    // Event Delegation & Bindings
+    document.addEventListener('click', e => {
+      const actionBtn = e.target.closest('.action-btn');
+      if (actionBtn) {
+        e.stopPropagation();
+        const { action, id } = actionBtn.dataset;
+        if (action === 'like') toggleLike(id);
+        if (action === 'stash') toggleStash(id);
+        if (action === 'copy') copyIdea(id);
+        return;
+      }
+
+      const card = e.target.closest('.idea-card');
+      if (card) {
+        openDetailModal(card.dataset.id);
+        return;
+      }
+
+      const tabBtn = e.target.closest('.tab-btn');
+      if (tabBtn) {
+        state.activeTab = tabBtn.dataset.tab;
+        renderAll();
+        return;
+      }
+
+      const topicBtn = e.target.closest('.topic-pill');
+      if (topicBtn) {
+        state.activeTopic = topicBtn.dataset.topic;
+        renderAll();
+      }
+    });
+
+    function syncSearch(val) {
+      state.searchQuery = val;
+      document.getElementById('searchInput').value = val;
+      document.getElementById('mobileSearchInput').value = val;
+      renderFeed();
+    }
+
+    document.getElementById('searchInput').addEventListener('input', e => syncSearch(e.target.value));
+    document.getElementById('mobileSearchInput').addEventListener('input', e => syncSearch(e.target.value));
+
+    document.getElementById('sortSelect').addEventListener('change', e => {
+      state.sortBy = e.target.value;
+      renderFeed();
+    });
+
+    document.getElementById('emptyActionBtn').addEventListener('click', () => {
+      if (state.activeTab === 'stash' && !state.searchQuery && state.activeTopic === 'All') {
+        state.activeTab = 'discover';
+      } else {
+        state.activeTopic = 'All';
+        syncSearch('');
+      }
+      renderAll();
+    });
+
+    document.getElementById('prevReviewBtn').addEventListener('click', () => {
+      state.reviewIndex -= 1;
+      renderReviewDeck();
+    });
+
+    document.getElementById('markReadNextBtn').addEventListener('click', () => {
+      const current = state.ideas[state.reviewIndex];
+      if (current && !current.read) {
+        current.read = true;
+        saveState();
+        updateHeaderMetrics();
+      }
+      state.reviewIndex += 1;
+      renderReviewDeck();
+    });
+
+    document.getElementById('closeDetailModal').addEventListener('click', closeDetailModal);
+    document.getElementById('detailModal').addEventListener('click', e => {
+      if (e.target.id === 'detailModal') closeDetailModal();
+    });
+
+    // Create Modal
+    function openCreateModal() {
+      const m = document.getElementById('createModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+    function closeCreateModal() {
+      const m = document.getElementById('createModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    document.getElementById('openCreateBtn').addEventListener('click', openCreateModal);
+    document.getElementById('closeCreateModal').addEventListener('click', closeCreateModal);
+    document.getElementById('cancelCreateBtn').addEventListener('click', closeCreateModal);
+    document.getElementById('createModal').addEventListener('click', e => {
+      if (e.target.id === 'createModal') closeCreateModal();
+    });
+
+    document.getElementById('createIdeaForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const title = document.getElementById('ideaTitleInput').value.trim();
+      const topic = document.getElementById('ideaTopicInput').value;
+      const author = document.getElementById('ideaAuthorInput').value.trim();
+      const sourceUrl = document.getElementById('ideaUrlInput').value.trim();
+      const insight = document.getElementById('ideaInsightInput').value.trim();
+      const takeaway = document.getElementById('ideaTakeawayInput').value.trim();
+
+      if (!title || !author || !insight || !takeaway) return;
+
+      const newIdea = {
+        id: 'custom-' + Date.now(),
+        topic,
+        title,
+        insight,
+        takeaway,
+        bullets: [],
+        sourceTitle: 'Personal Note',
+        author,
+        sourceUrl,
+        readMinutes: 1,
+        likes: 1,
+        liked: true,
+        stashed: true,
+        read: false,
+        note: '',
+        isCustom: true
+      };
+
+      state.ideas.unshift(newIdea);
+      saveState();
+      e.target.reset();
+      closeCreateModal();
+      state.activeTab = 'discover';
+      state.activeTopic = 'All';
+      showToast('New idea published & stashed!');
+      renderAll();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeDetailModal();
+        closeCreateModal();
+      }
+      if (state.activeTab === 'review' && document.getElementById('detailModal').classList.contains('hidden') && document.getElementById('createModal').classList.contains('hidden')) {
+        const current = state.ideas[state.reviewIndex];
+        if (!current) return;
+        if (e.key === 'ArrowRight') {
+          state.reviewIndex += 1;
+          renderReviewDeck();
+        } else if (e.key === 'ArrowLeft') {
+          state.reviewIndex -= 1;
+          renderReviewDeck();
+        } else if (e.key.toLowerCase() === 's') {
+          toggleStash(current.id);
+        } else if (e.key.toLowerCase() === 'l') {
+          toggleLike(current.id);
+        }
+      }
+    });
+
+    const THEME_KEY = 'ideastash_theme_v1';
+    function applyTheme(theme) {
+      const isDark = theme === 'dark';
+      document.documentElement.classList.toggle('dark', isDark);
+      document.getElementById('sunIcon').classList.toggle('hidden', !isDark);
+      document.getElementById('moonIcon').classList.toggle('hidden', isDark);
+      try {
+        localStorage.setItem(THEME_KEY, theme);
+      } catch (e) {}
+    }
+
+    function initTheme() {
+      let saved = null;
+      try {
+        saved = localStorage.getItem(THEME_KEY);
+      } catch (e) {}
+      if (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        saved = 'dark';
+      }
+      applyTheme(saved === 'dark' ? 'dark' : 'light');
+    }
+
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      applyTheme(isDark ? 'light' : 'dark');
+    });
+
+    initTheme();
+    loadState();
+    renderAll();
+  </script>
+</body>
+</html>

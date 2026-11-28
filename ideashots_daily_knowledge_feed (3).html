@@ -1,0 +1,3433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IdeaShots — Daily Knowledge Feed</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.47.10/dist/umd/supabase.min.js"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playwrite+FR+Trad:wght@100..400&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    *::-webkit-scrollbar {
+      display: none;
+    }
+    html, body {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden !important;
+      overscroll-behavior: none;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .swipe-card {
+      touch-action: none;
+      user-select: none;
+      will-change: transform, opacity;
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+    }
+    .swipe-card.dragging {
+      transition: none;
+    }
+    .swipe-card.swipe-out-up {
+      transform: translateY(-115%) rotate(-4deg) scale(0.96);
+      opacity: 0;
+    }
+    .swipe-card.swipe-out-down {
+      transform: translateY(115%) rotate(4deg) scale(0.96);
+      opacity: 0;
+    }
+    @keyframes cardEnterUp {
+      from { transform: translateY(28px) scale(0.96); opacity: 0.4; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .card-enter {
+      animation: cardEnterUp 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .card-hover {
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -8px rgba(17, 24, 39, 0.14);
+    }
+  </style>
+</head>
+<body class="h-full w-full flex flex-col overflow-hidden antialiased bg-[#EFF3F1] text-[#22333B] dark:bg-black dark:text-[#EFF3F1] transition-colors duration-200">
+
+  <!-- Top Navigation -->
+  <header class="sticky top-0 z-30 w-full max-w-full overflow-x-hidden bg-white/95 dark:bg-[#05080A]/95 backdrop-blur border-b border-[#DCE3DF] dark:border-[#1E2F37] transition-colors">
+    <div class="max-w-6xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 min-w-0">
+      <!-- Brand -->
+      <div class="flex items-end gap-0.5 shrink-0">
+        <div class="h-8 w-6 sm:h-9 sm:w-7 flex items-end justify-center text-[#22333B] dark:text-[#EFF3F1] translate-y-[1px]" title="ideashots">
+          <svg class="w-6 h-8 sm:w-7 sm:h-9" fill="none" stroke="currentColor" stroke-width="1.85" viewBox="4 0.5 16 21.5" preserveAspectRatio="xMidYMax meet">
+            <path stroke-linecap="round" d="M12 1.5v1.6M7.2 3.3l1 1.2M16.8 3.3l-1 1.2" stroke="#F59E0B" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.5 10.2a2.8 2.8 0 115 0c0 1-.6 1.6-.9 2.3h-3.2c-.3-.7-.9-1.3-.9-2.3z" fill="#FDE047" stroke="#F59E0B" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.5 11.5h11l-1.3 8.8a1.2 1.2 0 01-1.2 1H9a1.2 1.2 0 01-1.2-1l-1.3-8.8z" />
+            <path stroke-linecap="round" d="M8 18.2h8" opacity="0.65" />
+          </svg>
+        </div>
+        <div class="font-normal text-xl sm:text-2xl leading-none tracking-normal text-[#22333B] dark:text-[#EFF3F1]" style="font-family: 'Playwrite FR Trad', 'Inter', cursive, sans-serif;">ideashots</div>
+      </div>
+
+      <!-- Right Actions: Daily Goal + Auth + Theme -->
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div id="dailyGoalPill" class="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 text-[11px] sm:text-xs font-semibold whitespace-nowrap" title="Daily reading goal">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+          <span id="dailyGoalText">0 / 20</span>
+        </div>
+        <button id="authBtn" type="button" class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg border border-[#DCE3DF] dark:border-[#2A404A] bg-white dark:bg-[#121E24] text-[#22333B] dark:text-[#DCE6E2] hover:bg-gray-100 dark:hover:bg-[#1E2F37] text-[11px] sm:text-xs font-semibold transition cursor-pointer max-w-[95px] sm:max-w-none" title="Account & Cloud Sync">
+          <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+          <span id="authBtnLabel" class="truncate">Sign In</span>
+        </button>
+        <button id="themeToggleBtn" type="button" class="p-1.5 sm:p-2 rounded-lg border border-[#DCE3DF] dark:border-[#2A404A] bg-white dark:bg-[#121E24] text-[#3B525D] dark:text-[#C5D5CE] hover:bg-gray-100 dark:hover:bg-[#1E2F37] transition cursor-pointer" title="Toggle dark mode" aria-label="Toggle dark mode">
+          <svg id="sunIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <svg id="moonIcon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sub-Navigation Tabs (all 5 fit cleanly on mobile) -->
+    <div class="max-w-6xl mx-auto px-2 sm:px-6 flex items-center justify-between gap-2 border-t border-[#DCE3DF] dark:border-[#243740] min-h-[2.75rem] py-1">
+      <nav class="flex-1 sm:flex-none flex items-center justify-between sm:justify-start sm:gap-2 min-w-0" aria-label="Primary Views">
+        <button type="button" data-tab="review" class="tab-btn px-2 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-sm font-semibold whitespace-nowrap transition cursor-pointer">
+          <span class="sm:hidden">Ideas</span><span class="hidden sm:inline">Idea Flashcards</span>
+        </button>
+        <button type="button" data-tab="news" class="tab-btn px-2 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-sm font-semibold whitespace-nowrap transition cursor-pointer">
+          <span class="sm:hidden">News</span><span class="hidden sm:inline">News Flashcards</span>
+        </button>
+        <button type="button" data-tab="discover" class="tab-btn px-2 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-sm font-semibold whitespace-nowrap transition cursor-pointer">
+          Discover
+        </button>
+        <button type="button" data-tab="interests" class="tab-btn px-2 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-sm font-semibold whitespace-nowrap transition flex items-center gap-1 cursor-pointer">
+          <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          <span>Interests</span>
+        </button>
+        <button type="button" data-tab="stash" class="tab-btn px-2 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-sm font-semibold whitespace-nowrap transition flex items-center gap-1 cursor-pointer">
+          <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+          <span class="sm:hidden">Stash</span><span class="hidden sm:inline">My Stash</span>
+        </button>
+      </nav>
+
+      <div id="sortContainer" class="hidden sm:flex items-center gap-2 shrink-0">
+        <label for="sortSelect" class="text-xs text-[#556B75] dark:text-[#9BB2AA]">Sort:</label>
+        <select id="sortSelect" class="text-xs sm:text-sm font-medium text-[#22333B] dark:text-[#DCE6E2] bg-[#EFF3F1] dark:bg-[#121E24] hover:bg-gray-200/70 dark:hover:bg-[#1E2F37] rounded-lg px-2.5 py-1 outline-none cursor-pointer">
+          <option value="recommended">Recommended</option>
+          <option value="most-liked">Most Popular</option>
+          <option value="quickest">Quickest Read</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-3 sm:py-4 min-h-0 min-w-0 flex flex-col overflow-hidden">
+    <!-- Interests Tab Section -->
+    <section id="interestsSection" class="hidden max-w-3xl w-full mx-auto space-y-5 flex-1 min-h-0 overflow-y-auto no-scrollbar pb-4">
+      <div class="bg-white dark:bg-[#18262D] border border-[#DCE3DF] dark:border-[#243740] rounded-2xl p-5 sm:p-6">
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <h2 class="text-lg font-extrabold text-[#22333B] dark:text-[#EFF3F1]">Idea Flashcard Interests</h2>
+          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">Evergreen Knowledge</span>
+        </div>
+        <p class="text-xs sm:text-sm text-[#556B75] dark:text-[#9BB2AA] mb-4">Choose topics and keywords to shape your <strong>Idea Flashcards</strong> queue.</p>
+
+        <form id="addIdeaInterestForm" class="flex gap-2 mb-4">
+          <input id="customIdeaInterestInput" type="text" maxlength="40" placeholder="Add idea keyword (e.g., sleep, space, stoicism)..." class="flex-1 min-w-0 px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none" />
+          <button type="submit" class="shrink-0 px-4 py-2 rounded-xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-sm font-semibold transition cursor-pointer">Add</button>
+        </form>
+
+        <div class="mb-4">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Topics</h4>
+          <div id="ideaInterestTopicsList" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Custom Idea Keywords</h4>
+          <div id="ideaCustomKeywordsList" class="flex flex-wrap gap-2"></div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-[#18262D] border border-[#DCE3DF] dark:border-[#243740] rounded-2xl p-5 sm:p-6">
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <h2 class="text-lg font-extrabold text-[#22333B] dark:text-[#EFF3F1]">News Flashcard Interests</h2>
+          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300">Current Affairs</span>
+        </div>
+        <p class="text-xs sm:text-sm text-[#556B75] dark:text-[#9BB2AA] mb-4">Choose regions, beats, and keywords to tailor your <strong>News Flashcards</strong> feed.</p>
+
+        <form id="addNewsInterestForm" class="flex gap-2 mb-4">
+          <input id="customNewsInterestInput" type="text" maxlength="40" placeholder="Add news keyword (e.g., ASEAN, AI, semiconductors)..." class="flex-1 min-w-0 px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-sky-500 outline-none" />
+          <button type="submit" class="shrink-0 px-4 py-2 rounded-xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-sm font-semibold transition cursor-pointer">Add</button>
+        </form>
+
+        <div class="mb-4">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">News Beats</h4>
+          <div id="newsInterestTopicsList" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Custom News Keywords</h4>
+          <div id="newsCustomKeywordsList" class="flex flex-wrap gap-2"></div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-[#18262D] border border-[#DCE3DF] dark:border-[#243740] rounded-2xl p-5 sm:p-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 class="text-base font-extrabold text-[#22333B] dark:text-[#EFF3F1]">Contribute a Custom Idea</h3>
+          <p class="text-xs sm:text-sm text-[#556B75] dark:text-[#9BB2AA]">Write and stash your own takeaway card directly into your feed.</p>
+        </div>
+        <button type="button" class="open-create-btn inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-xs sm:text-sm font-semibold shadow-xs transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          <span>New Idea</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Quick Follow Search Bar Banner -->
+    <div id="searchFollowBar" class="hidden mb-4 flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-800/60">
+      <span class="text-xs sm:text-sm text-indigo-900 dark:text-indigo-200 truncate">Want to see more about <strong id="searchFollowTerm"></strong> in your Interests?</span>
+      <button id="followSearchBtn" type="button" class="shrink-0 px-3 py-1 rounded-lg bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-xs font-semibold transition cursor-pointer">
+        + Follow Topic
+      </button>
+    </div>
+
+    <!-- Topic Filter & Search Bar (visible on Discover & My Stash) -->
+    <section id="topicFilterBar" class="mb-3 shrink-0 space-y-2.5">
+      <div class="flex items-center gap-2">
+        <div class="relative flex-1 min-w-0">
+          <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
+          </svg>
+          <input id="searchInput" type="search" placeholder="Search ideas, authors, or topics..." class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-white dark:bg-[#18262D] dark:text-gray-100 dark:placeholder-gray-400 border border-[#DCE3DF] dark:border-[#243740] rounded-xl focus:border-[#C7A17A] dark:focus:border-[#5E8B7E] outline-none transition" />
+        </div>
+        <button type="button" class="open-interests-tab-btn shrink-0 inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-xs font-semibold shadow-xs transition cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          <span>New Interest</span>
+        </button>
+      </div>
+      <div id="topicPills" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"></div>
+    </section>
+
+    <!-- Feed Grid View (Discover & My Stash) -->
+    <section id="feedSection" class="flex-1 min-h-0 overflow-y-auto no-scrollbar pb-4">
+      <div id="feedGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+      <!-- Auto-populate / Infinite Feed Footer -->
+      <div id="infiniteFooter" class="mt-6 flex flex-col items-center justify-center gap-2 py-4">
+        <button id="loadMoreBtn" type="button" class="px-5 py-2.5 rounded-xl bg-white dark:bg-[#18262D] border border-[#DCE3DF] dark:border-[#2A404A] hover:border-indigo-400 text-sm font-semibold text-[#22333B] dark:text-[#DCE6E2] shadow-xs transition cursor-pointer">
+          Load More Knowledge Cards
+        </button>
+        <span id="infiniteStatus" class="text-xs text-gray-400">Auto-populates from live knowledge sources as you scroll</span>
+      </div>
+
+      <div id="emptyState" class="hidden text-center py-16 px-4 bg-white dark:bg-[#18262D] rounded-2xl border border-dashed border-gray-300 dark:border-[#2A404A]">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+        </div>
+        <h3 id="emptyTitle" class="text-base font-bold text-[#22333B] dark:text-[#EFF3F1] mb-1">No matching ideas</h3>
+        <p id="emptyDesc" class="text-sm text-[#556B75] dark:text-[#9BB2AA] max-w-sm mx-auto mb-4">Try clearing your search or switching topics to explore more insights.</p>
+        <button id="emptyActionBtn" type="button" class="px-4 py-2 rounded-xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-sm font-semibold transition cursor-pointer">
+          Reset Filters
+        </button>
+      </div>
+    </section>
+
+    <!-- Review Deck View (Minimalist Single-Screen Card Swipe) -->
+    <section id="reviewSection" class="hidden max-w-xl w-full mx-auto flex-1 min-h-0 flex flex-col">
+      <div class="flex items-center justify-between gap-2 mb-1.5 shrink-0">
+        <span id="reviewCounter" class="text-[11px] sm:text-xs font-semibold text-[#556B75] dark:text-[#9BB2AA]">0 unread</span>
+        <button type="button" class="open-interests-tab-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-[11px] font-semibold transition cursor-pointer">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          <span>New Interest</span>
+        </button>
+      </div>
+
+      <div class="w-full h-1 bg-gray-200 dark:bg-[#121E24] rounded-full overflow-hidden mb-2.5 shrink-0">
+        <div id="reviewProgressBar" class="h-full bg-[#C7A17A] dark:bg-[#5E8B7E] transition-all duration-300" style="width: 0%"></div>
+      </div>
+
+      <div class="flex-1 min-h-0 flex items-stretch gap-1.5 sm:gap-3 pb-1">
+        <div id="reviewCardHost" class="flex-1 min-w-0 min-h-0 relative"></div>
+        <div class="flex flex-col justify-center gap-2 shrink-0">
+          <button id="reviewUpBtn" type="button" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white dark:bg-[#18262D] border border-[#DCE3DF] dark:border-[#2A404A] hover:bg-gray-100 dark:hover:bg-[#1E2F37] text-[#22333B] dark:text-[#DCE6E2] flex items-center justify-center shadow-xs transition cursor-pointer" title="Previous idea" aria-label="Previous idea">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+          </button>
+          <button id="reviewDownBtn" type="button" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white flex items-center justify-center shadow-sm transition cursor-pointer" title="Next idea (marks read)" aria-label="Next idea">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- News Flashcards View (Minimalist Single-Screen Card Swipe) -->
+    <section id="newsSection" class="hidden max-w-xl w-full mx-auto flex-1 min-h-0 flex flex-col">
+      <div class="flex items-center justify-between gap-2 mb-1.5 shrink-0">
+        <span id="newsCounter" class="text-[11px] sm:text-xs font-semibold text-[#556B75] dark:text-[#9BB2AA]">0 unread</span>
+        <button type="button" class="open-interests-tab-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-[11px] font-semibold transition cursor-pointer">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          <span>New Interest</span>
+        </button>
+      </div>
+
+      <div class="w-full h-1 bg-gray-200 dark:bg-[#121E24] rounded-full overflow-hidden mb-2.5 shrink-0">
+        <div id="newsProgressBar" class="h-full bg-[#C7A17A] dark:bg-[#5E8B7E] transition-all duration-300" style="width: 0%"></div>
+      </div>
+
+      <div class="flex-1 min-h-0 flex items-stretch gap-1.5 sm:gap-3 pb-1">
+        <div id="newsCardHost" class="flex-1 min-w-0 min-h-0 relative"></div>
+        <div class="flex flex-col justify-center gap-2 shrink-0">
+          <button id="newsUpBtn" type="button" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white dark:bg-[#18262D] border border-[#DCE3DF] dark:border-[#2A404A] hover:bg-gray-100 dark:hover:bg-[#1E2F37] text-[#22333B] dark:text-[#DCE6E2] flex items-center justify-center shadow-xs transition cursor-pointer" title="Previous story" aria-label="Previous story">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+          </button>
+          <button id="newsDownBtn" type="button" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white flex items-center justify-center shadow-sm transition cursor-pointer" title="Next story (marks read)" aria-label="Next story">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Deep-Dive Modal -->
+  <div id="detailModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs">
+    <div class="bg-white dark:bg-[#18262D] rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#DCE3DF] dark:border-[#243740] p-6 relative">
+      <button id="closeDetailModal" type="button" class="absolute top-4 right-4 p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer" aria-label="Close modal">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <div id="detailModalContent"></div>
+    </div>
+  </div>
+
+  <!-- Create New Idea Modal -->
+  <div id="createModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs">
+    <div class="bg-white dark:bg-[#18262D] rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#DCE3DF] dark:border-[#243740] p-6 relative">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-[#22333B] dark:text-[#EFF3F1]">Stash a New Idea</h2>
+        <button id="closeCreateModal" type="button" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#1E2F37] transition cursor-pointer" aria-label="Close modal">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form id="createIdeaForm" class="space-y-4">
+        <div>
+          <label for="ideaTitleInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Idea Headline *</label>
+          <input id="ideaTitleInput" type="text" required maxlength="100" placeholder="e.g., Separate Policy from Enforcement" class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="ideaTopicInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Topic *</label>
+            <select id="ideaTopicInput" class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] rounded-xl bg-white dark:bg-[#142026] dark:text-gray-100 focus:border-indigo-500 outline-none">
+              <option value="Science & Cosmos">Science &amp; Cosmos</option>
+              <option value="History & Society">History &amp; Society</option>
+              <option value="Mind & Psychology">Mind &amp; Psychology</option>
+              <option value="Health & Biology">Health &amp; Biology</option>
+              <option value="Design & Creativity">Design &amp; Creativity</option>
+              <option value="Focus & Habits">Focus &amp; Habits</option>
+              <option value="Finance & Decisions">Finance &amp; Decisions</option>
+              <option value="Philosophy & Stoicism">Philosophy &amp; Stoicism</option>
+              <option value="Systems & Architecture">Systems &amp; Architecture</option>
+              <option value="Cybersecurity & NAC">Cybersecurity &amp; NAC</option>
+            </select>
+          </div>
+          <div>
+            <label for="ideaAuthorInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Source / Author *</label>
+            <input id="ideaAuthorInput" type="text" required maxlength="80" placeholder="e.g., Team Runbook / Book" class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none" />
+          </div>
+        </div>
+        <div>
+          <label for="ideaUrlInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Reference URL (Optional)</label>
+          <input id="ideaUrlInput" type="url" placeholder="https://..." class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none" />
+        </div>
+        <div>
+          <label for="ideaInsightInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Core Insight *</label>
+          <textarea id="ideaInsightInput" required rows="3" maxlength="400" placeholder="Distill the core idea in 2-3 crisp sentences..." class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none resize-none"></textarea>
+        </div>
+        <div>
+          <label for="ideaTakeawayInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">How to Apply *</label>
+          <input id="ideaTakeawayInput" type="text" required maxlength="180" placeholder="One concrete action to take today..." class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none" />
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" id="cancelCreateBtn" class="px-4 py-2 rounded-xl text-sm font-semibold text-[#3B525D] dark:text-[#C5D5CE] hover:bg-gray-100 dark:hover:bg-[#1E2F37] transition cursor-pointer">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-sm font-semibold shadow-sm transition cursor-pointer">Publish to Feed</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Auth / Account Modal -->
+  <div id="authModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs">
+    <div class="bg-white dark:bg-[#18262D] rounded-2xl max-w-md w-full shadow-2xl border border-[#DCE3DF] dark:border-[#243740] p-6 relative">
+      <div class="flex items-center justify-between mb-3">
+        <h2 id="authModalTitle" class="text-lg font-bold text-[#22333B] dark:text-[#EFF3F1]">Sign in to IdeaShots</h2>
+        <button id="closeAuthModal" type="button" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#1E2F37] transition cursor-pointer" aria-label="Close modal">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Signed-out view -->
+      <div id="authSignedOutView">
+        <p class="text-xs sm:text-sm text-[#556B75] dark:text-[#9BB2AA] mb-4">Sync your stashes, read progress, notes, and interests across your iPhone and desktop.</p>
+
+        <div class="space-y-2 mb-4">
+          <button id="googleSignInBtn" type="button" class="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl border border-[#DCE3DF] dark:border-[#2A404A] bg-white dark:bg-[#142026] hover:bg-gray-50 dark:hover:bg-[#1E2F37] text-[#22333B] dark:text-[#EFF3F1] text-sm font-semibold transition cursor-pointer">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+              <path fill="#EA4335" d="M12 10.2v3.9h5.4c-.2 1.3-1.5 3.9-5.4 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.7 3.4 14.5 2.5 12 2.5 6.8 2.5 2.5 6.8 2.5 12s4.3 9.5 9.5 9.5c5.5 0 9.1-3.9 9.1-9.3 0-.6-.1-1.1-.2-1.6H12z"/>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+
+        </div>
+
+        <div class="relative flex items-center justify-center mb-4">
+          <div class="border-t border-[#DCE3DF] dark:border-[#243740] w-full"></div>
+          <span class="px-2.5 text-[11px] uppercase tracking-wider text-[#556B75] dark:text-[#9BB2AA] bg-white dark:bg-[#18262D] shrink-0">or email</span>
+          <div class="border-t border-[#DCE3DF] dark:border-[#243740] w-full"></div>
+        </div>
+        <div class="flex gap-2 mb-4 p-1 bg-[#EFF3F1] dark:bg-[#121E24] rounded-xl">
+          <button type="button" id="authModeSignInBtn" class="flex-1 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-[#18262D] text-[#22333B] dark:text-[#EFF3F1] shadow-xs transition cursor-pointer">Sign In</button>
+          <button type="button" id="authModeSignUpBtn" class="flex-1 py-1.5 rounded-lg text-xs font-bold text-[#556B75] dark:text-[#9BB2AA] transition cursor-pointer">Create Account</button>
+        </div>
+
+        <form id="authForm" class="space-y-3">
+          <div id="authUsernameGroup" class="hidden">
+            <label for="authUsernameInput" class="block text-xs font-semibold text-[#22333B] dark:text-[#C5D5CE] mb-1">Preferred Username</label>
+            <input id="authUsernameInput" type="text" maxlength="30" placeholder="e.g., jermaine" class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none" />
+          </div>
+          <div>
+            <label for="authEmailInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Email</label>
+            <input id="authEmailInput" type="email" required placeholder="you@example.com" class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none" />
+          </div>
+          <div>
+            <label for="authPasswordInput" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Password</label>
+            <input id="authPasswordInput" type="password" required minlength="6" placeholder="At least 6 characters" class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none" />
+          </div>
+          <div id="authMessage" class="hidden text-xs rounded-xl px-3 py-2"></div>
+          <button id="authSubmitBtn" type="submit" class="w-full py-2.5 rounded-xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-sm font-semibold shadow-sm transition cursor-pointer">Sign In</button>
+        </form>
+      </div>
+
+      <!-- Signed-in view -->
+      <div id="authSignedInView" class="hidden space-y-4">
+        <div class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
+          <div class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 mb-1">Cloud Sync Active</div>
+          <div id="authUserEmail" class="text-sm font-semibold text-[#22333B] dark:text-[#EFF3F1] break-all"></div>
+        </div>
+        <div class="flex items-center justify-end gap-2">
+          <button id="authSyncNowBtn" type="button" class="px-4 py-2 rounded-xl border border-[#DCE3DF] dark:border-[#2A404A] text-xs sm:text-sm font-semibold text-[#22333B] dark:text-[#DCE6E2] hover:bg-gray-100 dark:hover:bg-[#1E2F37] transition cursor-pointer">Sync Now</button>
+          <button id="authSignOutBtn" type="button" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-semibold transition cursor-pointer">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- First-Time Interests Onboarding Modal -->
+  <div id="welcomeInterestsModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs">
+    <div class="bg-white dark:bg-[#18262D] rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#DCE3DF] dark:border-[#243740] p-6 relative">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-lg font-extrabold text-[#22333B] dark:text-[#EFF3F1]">Pick Your Interests</h2>
+        <button id="closeWelcomeInterestsModal" type="button" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#1E2F37] transition cursor-pointer" aria-label="Close modal">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <p class="text-xs sm:text-sm text-[#556B75] dark:text-[#9BB2AA] mb-4">Welcome! Select the topics you want to see in your <strong>Idea Flashcards</strong> and <strong>News Flashcards</strong> feeds (you can change these anytime in the Interests tab).</p>
+
+      <div id="welcomeUsernameGroup" class="mb-4">
+        <label for="welcomeUsernameInput" class="block text-xs font-bold uppercase tracking-wider text-[#556B75] dark:text-[#9BB2AA] mb-1.5">Preferred Username</label>
+        <input id="welcomeUsernameInput" type="text" maxlength="30" placeholder="How should we display your name?" class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-indigo-500 outline-none" />
+      </div>
+
+      <div class="mb-4">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-[#8A633C] dark:text-[#8CC0B0] mb-2">Idea Topics</h4>
+        <div id="welcomeIdeaTopicsList" class="flex flex-wrap gap-1.5 mb-2.5"></div>
+        <form id="welcomeCustomTopicForm" class="flex gap-2">
+          <input id="welcomeCustomTopicInput" type="text" maxlength="40" placeholder="Add your own (e.g., gaming, music, life hacks)..." class="flex-1 min-w-0 px-3 py-1.5 text-xs border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-[#C7A17A] dark:focus:border-[#5E8B7E] outline-none" />
+          <button type="submit" class="shrink-0 px-3 py-1.5 rounded-xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-xs font-semibold transition cursor-pointer">Add</button>
+        </form>
+        <div id="welcomeCustomKeywordsList" class="flex flex-wrap gap-1.5 mt-2"></div>
+      </div>
+
+      <div class="mb-5">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 mb-2">News Beats</h4>
+        <div id="welcomeNewsTopicsList" class="flex flex-wrap gap-1.5"></div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#DCE3DF] dark:border-[#243740]">
+        <button id="skipWelcomeInterestsBtn" type="button" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-gray-500 hover:bg-gray-100 dark:hover:bg-[#1E2F37] transition cursor-pointer">Skip for now</button>
+        <button id="saveWelcomeInterestsBtn" type="button" class="px-5 py-2 rounded-xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer">Save &amp; Start Reading</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-3 px-4 py-2 rounded-xl bg-[#22333B] dark:bg-[#121E24] border border-[#344B56] text-white text-xs font-medium shadow-lg whitespace-nowrap">
+    <span id="toastText">Saved</span>
+    <button id="toastUndoBtn" type="button" class="hidden px-2.5 py-0.5 rounded-lg bg-[#C7A17A] text-[#22333B] dark:bg-[#5E8B7E] dark:text-white text-xs font-bold cursor-pointer">Undo</button>
+  </div>
+
+  <script>
+    function getTopicStyle(topic) {
+      if (TOPIC_META[topic]) return TOPIC_META[topic];
+      return {
+        badge: 'bg-[#C7A17A]/20 text-[#6E4F2F] border-[#C7A17A]/50 dark:bg-[#5E8B7E]/25 dark:text-[#B8DCD0] dark:border-[#5E8B7E]/50',
+        tint: 'bg-[#C7A17A]/10 border-[#C7A17A]/35 text-[#22333B] dark:bg-[#5E8B7E]/15 dark:border-[#5E8B7E]/35 dark:text-[#EFF3F1]',
+        accent: 'text-[#8A633C] dark:text-[#8CC0B0]'
+      };
+    }
+
+    function toTitleCase(str) {
+      return str.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+    }
+
+    const TOPIC_META = {
+      'Systems & Architecture': {
+        badge: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/70',
+        tint: 'bg-emerald-50/70 border-emerald-200/70 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800/50 dark:text-emerald-200',
+        accent: 'text-emerald-700 dark:text-emerald-300'
+      },
+      'Cybersecurity & NAC': {
+        badge: 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-800/70',
+        tint: 'bg-cyan-50/70 border-cyan-200/70 text-cyan-900 dark:bg-cyan-950/40 dark:border-cyan-800/50 dark:text-cyan-200',
+        accent: 'text-cyan-700 dark:text-cyan-300'
+      },
+      'Focus & Habits': {
+        badge: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/70',
+        tint: 'bg-amber-50/70 border-amber-200/70 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800/50 dark:text-amber-200',
+        accent: 'text-amber-800 dark:text-amber-300'
+      },
+      'Finance & Decisions': {
+        badge: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/70',
+        tint: 'bg-rose-50/70 border-rose-200/70 text-rose-900 dark:bg-rose-950/40 dark:border-rose-800/50 dark:text-rose-200',
+        accent: 'text-rose-700 dark:text-rose-300'
+      },
+      'Philosophy & Stoicism': {
+        badge: 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/60 dark:text-violet-300 dark:border-violet-800/70',
+        tint: 'bg-violet-50/70 border-violet-200/70 text-violet-900 dark:bg-violet-950/40 dark:border-violet-800/50 dark:text-violet-200',
+        accent: 'text-violet-700 dark:text-violet-300'
+      },
+      'Science & Cosmos': {
+        badge: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800/70',
+        tint: 'bg-sky-50/70 border-sky-200/70 text-sky-900 dark:bg-sky-950/40 dark:border-sky-800/50 dark:text-sky-200',
+        accent: 'text-sky-700 dark:text-sky-300'
+      },
+      'History & Society': {
+        badge: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-800/70',
+        tint: 'bg-orange-50/70 border-orange-200/70 text-orange-900 dark:bg-orange-950/40 dark:border-orange-800/50 dark:text-orange-200',
+        accent: 'text-orange-700 dark:text-orange-300'
+      },
+      'Mind & Psychology': {
+        badge: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 dark:bg-fuchsia-950/60 dark:text-fuchsia-300 dark:border-fuchsia-800/70',
+        tint: 'bg-fuchsia-50/70 border-fuchsia-200/70 text-fuchsia-900 dark:bg-fuchsia-950/40 dark:border-fuchsia-800/50 dark:text-fuchsia-200',
+        accent: 'text-fuchsia-700 dark:text-fuchsia-300'
+      },
+      'Health & Biology': {
+        badge: 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800/70',
+        tint: 'bg-teal-50/70 border-teal-200/70 text-teal-900 dark:bg-teal-950/40 dark:border-teal-800/50 dark:text-teal-200',
+        accent: 'text-teal-700 dark:text-teal-300'
+      },
+      'Design & Creativity': {
+        badge: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/70',
+        tint: 'bg-indigo-50/70 border-indigo-200/70 text-indigo-900 dark:bg-indigo-950/40 dark:border-indigo-800/50 dark:text-indigo-200',
+        accent: 'text-indigo-700 dark:text-indigo-300'
+      },
+      'Gaming': {
+        badge: 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/60 dark:text-violet-300 dark:border-violet-800/70',
+        tint: 'bg-violet-50/70 border-violet-200/70 text-violet-900 dark:bg-violet-950/40 dark:border-violet-800/50 dark:text-violet-200',
+        accent: 'text-violet-700 dark:text-violet-300'
+      },
+      'Music': {
+        badge: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/70',
+        tint: 'bg-amber-50/70 border-amber-200/70 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800/50 dark:text-amber-200',
+        accent: 'text-amber-800 dark:text-amber-300'
+      },
+      'Beauty & Skincare': {
+        badge: 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/60 dark:text-pink-300 dark:border-pink-800/70',
+        tint: 'bg-pink-50/70 border-pink-200/70 text-pink-900 dark:bg-pink-950/40 dark:border-pink-800/50 dark:text-pink-200',
+        accent: 'text-pink-700 dark:text-pink-300'
+      },
+      'Live Discovery': {
+        badge: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/70',
+        tint: 'bg-blue-50/70 border-blue-200/70 text-blue-900 dark:bg-blue-950/40 dark:border-blue-800/50 dark:text-blue-200',
+        accent: 'text-blue-700 dark:text-blue-300'
+      },
+      'World Affairs': {
+        badge: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800/70',
+        tint: 'bg-sky-50/70 border-sky-200/70 text-sky-900 dark:bg-sky-950/40 dark:border-sky-800/50 dark:text-sky-200',
+        accent: 'text-sky-700 dark:text-sky-300'
+      },
+      'Economy & Trade': {
+        badge: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/70',
+        tint: 'bg-emerald-50/70 border-emerald-200/70 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800/50 dark:text-emerald-200',
+        accent: 'text-emerald-700 dark:text-emerald-300'
+      },
+      'Climate & Energy': {
+        badge: 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800/70',
+        tint: 'bg-teal-50/70 border-teal-200/70 text-teal-900 dark:bg-teal-950/40 dark:border-teal-800/50 dark:text-teal-200',
+        accent: 'text-teal-700 dark:text-teal-300'
+      },
+      'Tech & AI': {
+        badge: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/70',
+        tint: 'bg-indigo-50/70 border-indigo-200/70 text-indigo-900 dark:bg-indigo-950/40 dark:border-indigo-800/50 dark:text-indigo-200',
+        accent: 'text-indigo-700 dark:text-indigo-300'
+      },
+      'Health & Science': {
+        badge: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/70',
+        tint: 'bg-rose-50/70 border-rose-200/70 text-rose-900 dark:bg-rose-950/40 dark:border-rose-800/50 dark:text-rose-200',
+        accent: 'text-rose-700 dark:text-rose-300'
+      },
+      'Neuroscience & Learning': {
+        badge: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800/70',
+        tint: 'bg-purple-50/70 border-purple-200/70 text-purple-900 dark:bg-purple-950/40 dark:border-purple-800/50 dark:text-purple-200',
+        accent: 'text-purple-700 dark:text-purple-300'
+      },
+      'Behavioral Economics': {
+        badge: 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/60 dark:text-pink-300 dark:border-pink-800/70',
+        tint: 'bg-pink-50/70 border-pink-200/70 text-pink-900 dark:bg-pink-950/40 dark:border-pink-800/50 dark:text-pink-200',
+        accent: 'text-pink-700 dark:text-pink-300'
+      },
+      'Economics & Policy': {
+        badge: 'bg-lime-50 text-lime-800 border-lime-200 dark:bg-lime-950/60 dark:text-lime-300 dark:border-lime-800/70',
+        tint: 'bg-lime-50/70 border-lime-200/70 text-lime-900 dark:bg-lime-950/40 dark:border-lime-800/50 dark:text-lime-200',
+        accent: 'text-lime-800 dark:text-lime-300'
+      },
+      'Anthropology & Sociology': {
+        badge: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/70',
+        tint: 'bg-amber-50/70 border-amber-200/70 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800/50 dark:text-amber-200',
+        accent: 'text-amber-800 dark:text-amber-300'
+      },
+      'AI & Computing': {
+        badge: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/70',
+        tint: 'bg-indigo-50/70 border-indigo-200/70 text-indigo-900 dark:bg-indigo-950/40 dark:border-indigo-800/50 dark:text-indigo-200',
+        accent: 'text-indigo-700 dark:text-indigo-300'
+      },
+      'Communication & Rhetoric': {
+        badge: 'bg-stone-100 text-stone-800 border-stone-300 dark:bg-stone-900 dark:text-stone-300 dark:border-stone-700',
+        tint: 'bg-stone-100/80 border-stone-200 text-stone-900 dark:bg-stone-900/60 dark:border-stone-700 dark:text-stone-200',
+        accent: 'text-stone-800 dark:text-stone-300'
+      },
+      'Asia-Pacific': {
+        badge: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/70',
+        tint: 'bg-amber-50/70 border-amber-200/70 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800/50 dark:text-amber-200',
+        accent: 'text-amber-800 dark:text-amber-300'
+      }
+    };
+
+    const IDEA_TOPICS = [
+      'Science & Cosmos',
+      'Neuroscience & Learning',
+      'Behavioral Economics',
+      'Economics & Policy',
+      'Anthropology & Sociology',
+      'AI & Computing',
+      'Communication & Rhetoric',
+      'History & Society',
+      'Mind & Psychology',
+      'Health & Biology',
+      'Design & Creativity',
+      'Focus & Habits',
+      'Finance & Decisions',
+      'Philosophy & Stoicism',
+      'Systems & Architecture',
+      'Cybersecurity & NAC',
+      'Gaming',
+      'Music',
+      'Beauty & Skincare'
+    ];
+
+    const NEWS_TOPICS = [
+      'World Affairs',
+      'Economy & Trade',
+      'Climate & Energy',
+      'Tech & AI',
+      'Health & Science',
+      'Asia-Pacific'
+    ];
+
+    const INITIAL_NEWS = [
+      {
+        id: 'news-1',
+        topic: 'Climate & Energy',
+        title: 'COP31 Highlights Electrification & Implementation Push',
+        insight: 'At COP31 in Antalya, Türkiye (Nov 2026), UN Climate Change leaders emphasized moving from pledges to real-world infrastructure, grid electrification, and faster disaster early-warning systems.',
+        takeaway: 'Track how grid upgrades and clean electrification targets reshape energy and industrial policy in 2027.',
+        bullets: [
+          'UNFCCC highlighted six Action Agenda axes turning commitments into measurable infrastructure.',
+          'Early Warnings for All (EW4All) expanded multi-hazard warning coverage to 136 countries.'
+        ],
+        sourceTitle: 'UNFCCC COP31 News',
+        author: 'Nov 2026 · Antalya, Türkiye',
+        sourceUrl: 'https://unfccc.int/news/cop31-delivers-important-progress-across-negotiations-and-action-agenda-advancing-implementation-but',
+        readMinutes: 1,
+        likes: 94,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: '',
+        isNews: true
+      },
+      {
+        id: 'news-2',
+        topic: 'Climate & Energy',
+        title: 'WMO 2026 Climate Update Flags Record Ocean Heat & El Niño',
+        insight: 'The World Meteorological Organization reported that 2026 is among the four warmest years on record, with upper-ocean heat content and global mean sea level reaching record highs alongside a developing El Niño.',
+        takeaway: 'El Niño acts as a risk multiplier for heatwaves, shifting rainfall, and agricultural supply chains.',
+        bullets: [
+          'Jan–Sep 2026 global mean surface temperature averaged 1.47 °C above the 1850–1900 baseline.',
+          'Glaciers lost over 400 gigatons of ice in 2025, adding ~1 mm to sea-level rise.'
+        ],
+        sourceTitle: 'World Meteorological Organization',
+        author: 'Nov 2026 · Global',
+        sourceUrl: 'https://wmo.int/news/media-centre/state-of-climate-2026-gives-new-meaning-phrase-charts',
+        readMinutes: 1,
+        likes: 112,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: '',
+        isNews: true
+      },
+      {
+        id: 'news-3',
+        topic: 'Economy & Trade',
+        title: 'WTO Revises 2026 Trade Forecast Upward Amid New Measures',
+        insight: 'Despite a surge in new trade-restrictive measures across major economies, the World Trade Organization revised its 2026 world merchandise trade volume growth forecast upward in its November monitoring report.',
+        takeaway: 'Supply chains are rerouting rather than halting—watch tariff and trade-facilitation shifts closely.',
+        bullets: [
+          'WTO members simultaneously stepped up trade-facilitating measures alongside targeted restrictions.',
+          'Global trade resilience remains sensitive to shipping corridor disruptions and monetary policy.'
+        ],
+        sourceTitle: 'World Trade Organization',
+        author: 'Nov 2026 · Geneva',
+        sourceUrl: 'https://www.wto.org/english/news_e/news26_e/tmwto_17nov26_552_e.htm',
+        readMinutes: 1,
+        likes: 78,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: '',
+        isNews: true
+      },
+      {
+        id: 'news-4',
+        topic: 'Climate & Energy',
+        title: 'Dual-Fuel Shipping Accelerates Renewable Marine Fuel Demand',
+        insight: 'A November 2026 World Shipping Council report shows dual-fuel container ships and vehicle carriers are scaling rapidly, positioning renewable marine fuels to meet up to 20% of liner energy demand by 2030.',
+        takeaway: 'Maritime decarbonization hinges on green methanol and ammonia bunkering infrastructure at major ports.',
+        bullets: [
+          'New vessel orders increasingly include dual-fuel propulsion capability.',
+          'Port hubs in Asia and Europe are competing to become green bunkering centers.'
+        ],
+        sourceTitle: 'World Shipping Council',
+        author: 'Nov 2026 · Maritime',
+        sourceUrl: 'https://www.worldshipping.org/news/wsc-report-highlights-global-renewable-marine-fuel-opportunities-as-dual-fuel-fleet-set-to-meet-20-of-liner-energy-demand-by-2030',
+        readMinutes: 1,
+        likes: 65,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: '',
+        isNews: true
+      },
+      {
+        id: 'news-5',
+        topic: 'Health & Science',
+        title: 'WHO Launches "Together for Science and Health" Initiative',
+        insight: 'In November 2026, the World Health Organization launched a global coalition aimed at strengthening public trust in medical science, combating misinformation, and improving community health communication.',
+        takeaway: 'Clear, transparent public-health communication is treated as core infrastructure for future preparedness.',
+        bullets: [
+          'Coordinated across Geneva, Paris, Brazzaville, and New Delhi regional hubs.',
+          'Focuses on evidence-based guidance and local scientific engagement.'
+        ],
+        sourceTitle: 'World Health Organization',
+        author: 'Nov 2026 · Global Health',
+        sourceUrl: 'https://www.who.int/news/item/10-11-2026-who-launches-together-for-science-and-health-movement-to-strengthen-trust-worldwide',
+        readMinutes: 1,
+        likes: 83,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: '',
+        isNews: true
+      },
+      {
+        id: 'news-6',
+        topic: 'Economy & Trade',
+        title: 'Central Banks Balance Inflation & Growth Heading Into 2027',
+        insight: 'With IMF projections putting 2026 global headline inflation around 4.7% before easing in 2027, central banks face a delicate trade-off between holding rates restrictive and supporting slowing demand.',
+        takeaway: 'Borrowing costs and currency swings remain key variables for household and corporate budgets into 2027.',
+        bullets: [
+          'Export-heavy Asian economies are watching domestic consumption and manufacturing cost trends.',
+          'Policy divergence across major central banks continues to drive FX volatility.'
+        ],
+        sourceTitle: 'ISA Global Outlook',
+        author: 'Nov 2026 · Macroeconomics',
+        sourceUrl: 'https://www.isa-world.com/news/?tx_ttnews%5BbackPid%5D=1&tx_ttnews%5Btt_news%5D=713&cHash=0634ade577eeec719038f4917d9b2ce0',
+        readMinutes: 1,
+        likes: 91,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: '',
+        isNews: true
+      }
+    ];
+
+    const INITIAL_IDEAS = [
+      {
+        id: 'gam-1',
+        topic: 'Gaming',
+        title: 'Game Accessibility Is About Removing Unintentional Barriers',
+        insight: 'As accessibility advocates explained to IGN, calling for accessible game design is not about slapping on a single "Easy Mode"—it is about letting players customize controls, timing windows, and sensory cues without losing the core challenge.',
+        takeaway: 'Look for games that offer granular sliders (like timing or audio cues) so you can tune friction without dulling the thrill.',
+        bullets: [
+          'Standardized difficulty labels fail because every player faces different physical or cognitive barriers.',
+          'Granular options—custom keybinds, visual cues, and game-speed toggles—preserve creative intent.'
+        ],
+        sourceTitle: 'IGN · Accessibility in Games',
+        author: 'IGN Feature',
+        sourceUrl: 'https://www.ign.com/articles/video-game-difficulty-accessibility-easy-mode-debate',
+        readMinutes: 2,
+        likes: 184,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'mus-1',
+        topic: 'Music',
+        title: 'How Music Exploits Your Brain\'s Prediction & Reward Loops',
+        insight: 'Neuroscientist Daniel J. Levitin explains that composers build expectations with familiar chord progressions, then subtly break them—triggering dopamine reward circuitry when your brain discovers a surprising new path.',
+        takeaway: 'Listen to a full album start-to-finish without skipping to rebuild sustained, deep-focus attention.',
+        bullets: [
+          'Long-form music trains sustained attention through continuous patterns of tension and resolution.',
+          'Prediction errors in melody activate the same curiosity-reward pathways used in learning.'
+        ],
+        sourceTitle: 'Thought Economics · Daniel J. Levitin',
+        author: 'Daniel J. Levitin',
+        sourceUrl: 'https://thoughteconomics.com/daniel-j-levitin/',
+        readMinutes: 2,
+        likes: 172,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'bea-1',
+        topic: 'Beauty & Skincare',
+        title: 'Cleanser, Moisturizer & SPF Are a Complete Skincare Foundation',
+        insight: 'Dermatologists quoted in Allure and Cleveland Clinic guides agree that beginners do not need a seven-step routine: a gentle cleanser, one hydrating moisturizer on damp skin, and daily SPF 30+ cover the essentials.',
+        takeaway: 'Introduce only one new active ingredient at a time over several weeks so you know what actually works.',
+        bullets: [
+          'Apply moisturizer within a minute or two of cleansing while skin is still slightly damp.',
+          'Judge hydration two hours later—skin should feel supple, never tight or tacky under sunscreen.'
+        ],
+        sourceTitle: 'Dermatologist Guide (citing Allure & Cleveland Clinic)',
+        author: 'Skincare Science',
+        sourceUrl: 'https://lgbeauty.com/blog/a-simple-face-care-routine-for-beginners',
+        readMinutes: 1,
+        likes: 156,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'econ-1',
+        topic: 'Economics & Policy',
+        title: 'Communities Self-Govern Shared Resources Without Privatization',
+        insight: 'Nobel laureate Elinor Ostrom showed that local users routinely prevent the "Tragedy of the Commons" through clear boundaries, local monitoring, proportional rules, and graduated sanctions—outperforming rigid top-down mandates.',
+        takeaway: 'When managing shared team resources, establish transparent usage rules and lightweight peer accountability.',
+        bullets: [
+          'Common-pool resources (fisheries, forests, bandwidth) face subtractability and high exclusion costs.',
+          'Face-to-face communication and collective rule-making consistently raise group cooperation.',
+          'Graduated sanctions start small for first mistakes and escalate only for repeated violations.'
+        ],
+        sourceTitle: 'Nobel Prize Lecture · Elinor Ostrom',
+        author: 'Elinor Ostrom (2009)',
+        sourceUrl: 'https://www.nobelprize.org/uploads/2018/06/ostrom_lecture.pdf',
+        readMinutes: 2,
+        likes: 218,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'beh-1',
+        topic: 'Behavioral Economics',
+        title: 'Losses Loom Larger Than Gains & Promises Create Endowment',
+        insight: 'Under Prospect Theory, people evaluate outcomes relative to a reference point rather than absolute wealth. Losing something hurts far more than gaining the equivalent—and even unfulfilled promises trigger loss pain.',
+        takeaway: 'Before rejecting a change, check whether you are clinging to the status quo purely out of loss aversion.',
+        bullets: [
+          'People value items and decision rights more highly the moment they feel ownership (Endowment Effect).',
+          'Decisions made in "hot" emotional states often diverge sharply from calm "cold" planning.',
+          'Diverse peer review helps counter hot-state overreactions under uncertainty.'
+        ],
+        sourceTitle: 'Stanford Medicine · Prospect Theory Primer',
+        author: 'Kahneman & Tversky (Econometrica)',
+        sourceUrl: 'https://med.stanford.edu/content/dam/sm/CME/documents/Reading_Prospect_Theory_Basic.pdf',
+        readMinutes: 2,
+        likes: 242,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'neu-1',
+        topic: 'Neuroscience & Learning',
+        title: 'Spaced Practice Beats Cramming for Long-Term Retention',
+        insight: 'Peer-reviewed memory research confirms the spacing effect: distributing learning episodes over time produces dramatically stronger long-term recall than massed cramming, because each retrieval forces neural reconsolidation.',
+        takeaway: 'Review a new concept after 1 day, 3 days, and 7 days instead of rereading it five times in one sitting.',
+        bullets: [
+          'Massed repetition creates an illusion of fluency that decays rapidly.',
+          'Rich retrieval cues and active recall strengthen cortical memory traces.',
+          'Spacing intervals should expand gradually as recall becomes more reliable.'
+        ],
+        sourceTitle: 'NIH / PMC · The Spacing Effect',
+        author: 'Neurobiology of Learning & Memory',
+        sourceUrl: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC5476736/',
+        readMinutes: 2,
+        likes: 235,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'ant-1',
+        topic: 'Anthropology & Sociology',
+        title: 'The Social Brain & Seven Pillars of Lasting Friendship',
+        insight: 'Evolutionary anthropologist Robin Dunbar proposed that human social networks cluster into layered circles (around ~150 stable ties) shaped by cognitive bandwidth—and that durable friendships rest on seven shared pillars.',
+        takeaway: 'Invest time intentionally in your inner 5–15 relationships; breadth cannot replace depth.',
+        bullets: [
+          'Seven friendship pillars: language, place of origin, career trajectory, hobbies, humor, worldview, and music.',
+          'Relationships are organized in concentric layers of decreasing emotional intensity.',
+          'Time and energy allocation—not just brain size—govern how many active ties you can sustain.'
+        ],
+        sourceTitle: 'Royal Society Open Science & NIH PMC',
+        author: 'Robin Dunbar et al.',
+        sourceUrl: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11896044/',
+        readMinutes: 2,
+        likes: 196,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'ai-1',
+        topic: 'AI & Computing',
+        title: 'Foundation Models Act as Fast Pattern Engines Needing Grounding',
+        insight: 'Stanford HAI researchers describe foundation models as multipurpose transformer systems trained on broad data—powerful at fast, surface-level System 1 synthesis, yet requiring grounding and verification for reliable reasoning.',
+        takeaway: 'Use AI models to generate rapid hypotheses and drafts, then apply structured verification before acting.',
+        bullets: [
+          'One pretrained base model can adapt across language, vision, code, and robotics.',
+          'Grounding models in real-world physics, tools, or primary data reduces hallucination.',
+          'Pairing fast neural proposals with formal checks mirrors System 1 + System 2 cognition.'
+        ],
+        sourceTitle: 'Stanford HAI · Foundation Models',
+        author: 'Stanford Institute for Human-Centered AI',
+        sourceUrl: 'https://hai.stanford.edu/news/reflections-foundation-models',
+        readMinutes: 2,
+        likes: 204,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'com-1',
+        topic: 'Communication & Rhetoric',
+        title: 'Trustworthy Persuasion Balances Ethos, Pathos & Logos',
+        insight: 'In Aristotle’s Rhetoric, persuasive speech rests on three pillars: the speaker’s character and competence (ethos), the audience’s emotional state (pathos), and the rational argument itself (logos).',
+        takeaway: 'Lead high-stakes proposals with practical competence and shared goodwill before diving into data.',
+        bullets: [
+          'Ethos requires three traits: practical intelligence (phronêsis), virtue, and goodwill toward the audience.',
+          'Logos alone often fails when audiences doubt the speaker’s motives.',
+          'Rhetoric is a neutral tool—structured reasoning distinguishes genuine persuasion from manipulation.'
+        ],
+        sourceTitle: 'Stanford Encyclopedia of Philosophy',
+        author: 'Aristotle / Stanford SEP',
+        sourceUrl: 'https://plato.stanford.edu/entries/aristotle-rhetoric/',
+        readMinutes: 2,
+        likes: 189,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sci-1',
+        topic: 'Science & Cosmos',
+        title: 'Earth Is a Tiny Speck Suspended in a Sunbeam',
+        insight: 'Photographed by Voyager 1 from roughly 6 billion kilometers away, Earth appears smaller than a single pixel—challenging human illusions of cosmic centrality and reminding us we share one fragile home.',
+        takeaway: 'Zoom out to cosmic scale whenever daily status games or trivial disagreements feel overwhelming.',
+        bullets: [
+          'Voyager 1 turned its camera back toward Earth on February 14, 1990 at Carl Sagan’s urging.',
+          'Earth’s pale blue hue comes from Rayleigh scattering of sunlight in our atmosphere.',
+          'There is no nearby refuge to migrate to—preserving Earth and treating one another kindly is our shared responsibility.'
+        ],
+        sourceTitle: 'NASA Science · Voyager 1',
+        author: 'Carl Sagan',
+        sourceUrl: 'https://science.nasa.gov/mission/voyager/voyager-1s-pale-blue-dot/',
+        readMinutes: 2,
+        likes: 289,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'psy-1',
+        topic: 'Mind & Psychology',
+        title: 'System 1 Runs on Autopilot; System 2 Does the Math',
+        insight: 'Your brain operates with two modes: System 1 is fast, intuitive, and automatic, while System 2 is slow, deliberate, and effortful. Most cognitive biases happen when System 1 answers a hard question quickly.',
+        takeaway: 'When stakes are high or numbers feel intuitive, pause for 30 seconds to let System 2 verify the logic.',
+        bullets: [
+          'System 1 excels at pattern recognition and snap judgments—but falls for framing and anchoring.',
+          'System 2 requires conscious effort and easily fatigues under time pressure.',
+          'Better decisions come from designing checklists and pauses that trigger System 2 before committing.'
+        ],
+        sourceTitle: 'Nobel Prize Lecture · Bounded Rationality',
+        author: 'Daniel Kahneman',
+        sourceUrl: 'https://www.nobelprize.org/uploads/2018/06/kahnemann-lecture.pdf',
+        readMinutes: 2,
+        likes: 247,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'his-1',
+        topic: 'History & Society',
+        title: 'Shared Myths Enabled Large-Scale Human Cooperation',
+        insight: 'Unlike other animals, Homo sapiens can cooperate flexibly in groups of millions because we invent and believe shared stories—nations, laws, money, and human rights—that exist in collective imagination.',
+        takeaway: 'To understand how any large institution behaves, examine the shared narratives and incentives holding it together.',
+        bullets: [
+          'The Cognitive Revolution (~70,000 years ago) unlocked abstract language and shared fiction.',
+          'Money and legal corporations are powerful intersubjective realities built on mutual trust.',
+          'History’s turning points—Cognitive, Agricultural, and Scientific—each reshaped how humans organize.'
+        ],
+        sourceTitle: 'Sapiens: A Brief History of Humankind',
+        author: 'Yuval Noah Harari',
+        sourceUrl: 'https://www.ynharari.com/topic/power-and-imagination/',
+        readMinutes: 2,
+        likes: 231,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'bio-1',
+        topic: 'Health & Biology',
+        title: 'Sleeping Under 7 Hours Quietly Compounds Health Risk',
+        insight: 'Sleep is not passive downtime—it is an active biological maintenance cycle. Regularly getting less than 7 hours impairs memory consolidation, weakens immunity, and elevates long-term cardiovascular risk.',
+        takeaway: 'Protect a consistent 7–8 hour sleep window by setting a wind-down alarm 45 minutes before bed.',
+        bullets: [
+          'Deep NREM sleep transfers fragile short-term memories into long-term cortical storage.',
+          'REM sleep supports emotional regulation and creative problem-solving.',
+          'Consistent wake and sleep times anchor your circadian rhythm better than weekend catch-up sleep.'
+        ],
+        sourceTitle: 'NIH / PMC · Slow-Wave Sleep & Memory',
+        author: 'Matthew Walker',
+        sourceUrl: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC2824214/',
+        readMinutes: 2,
+        likes: 254,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'des-1',
+        topic: 'Design & Creativity',
+        title: 'Visibility, Affordances & Feedback Beat User Manuals',
+        insight: 'When people struggle with a door, switch, or app, it is usually a design failure—not human error. Intuitive products make available actions visible, map controls naturally, and give immediate feedback.',
+        takeaway: 'If someone needs instructions to use something you built, add clearer visual cues and instant feedback.',
+        bullets: [
+          'Affordances show what actions are possible (e.g., a flat plate signals "push", a handle signals "pull").',
+          'Natural mapping aligns controls with their physical or spatial effects.',
+          'Immediate feedback confirms every action was registered, preventing double-clicks and confusion.'
+        ],
+        sourceTitle: 'The Design of Everyday Things',
+        author: 'Don Norman',
+        sourceUrl: 'https://medium.com/@sachinrekhi/don-normans-principles-of-interaction-design-51025a2c0f33',
+        readMinutes: 2,
+        likes: 198,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'psy-2',
+        topic: 'Mind & Psychology',
+        title: 'Six Universal Shortcuts Drive Human Persuasion',
+        insight: 'Because decision-making is effortful, humans rely on predictable mental shortcuts: reciprocity, scarcity, authority, commitment & consistency, liking, and social proof.',
+        takeaway: 'Spot these six triggers in ads and negotiations—ask yourself if you want the item or are just reacting to scarcity.',
+        bullets: [
+          'Reciprocity: We feel compelled to return favors, even small unsolicited ones.',
+          'Social Proof: Under uncertainty, we look to what peers are doing.',
+          'Commitment & Consistency: Small initial agreements make larger follow-up requests far easier to accept.'
+        ],
+        sourceTitle: 'Influence: The Psychology of Persuasion',
+        author: 'Robert Cialdini',
+        sourceUrl: 'https://people-shift.com/articles/cialdinis-6-principles-of-persuasion/',
+        readMinutes: 2,
+        likes: 212,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sci-2',
+        topic: 'Science & Cosmos',
+        title: 'Extraordinary Claims Require Extraordinary Evidence',
+        insight: 'Scientific thinking is a baloney-detection toolkit: stay open to wonder and new ideas, but demand proportional, reproducible evidence before accepting sweeping claims.',
+        takeaway: 'When reading a dramatic headline, check the sample size, control group, and whether independent teams replicated it.',
+        bullets: [
+          'Skepticism and wonder are partners, not opposites.',
+          'Test rival hypotheses rather than cherry-picking confirming anecdotes.',
+          'Correlations in small datasets frequently vanish under rigorous replication.'
+        ],
+        sourceTitle: 'Carl Sagan & Critical Thinking',
+        author: 'Carl Sagan',
+        sourceUrl: 'https://www.planetary.org/worlds/pale-blue-dot',
+        readMinutes: 1,
+        likes: 226,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sci-3',
+        topic: 'Science & Cosmos',
+        title: 'Most of History Happened Before Written Records',
+        insight: 'Science is not a dry list of formulas—it is a detective story of curious humans piecing together deep time, plate tectonics, atoms, and evolution from faint clues left in rocks and starlight.',
+        takeaway: 'Pick one everyday phenomenon—like why ice floats or how GPS corrects for relativity—and trace the discovery story behind it.',
+        bullets: [
+          'Nearly every atom in your body was forged inside ancient stars.',
+          'Major breakthroughs often came from amateurs and outsiders asking simple questions.',
+          'Understanding how we know something makes scientific facts far more memorable.'
+        ],
+        sourceTitle: 'A Short History of Nearly Everything',
+        author: 'Bill Bryson',
+        sourceUrl: 'https://www.supersummary.com/a-short-history-of-nearly-everything/summary/',
+        readMinutes: 2,
+        likes: 187,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sys-1',
+        topic: 'Systems & Architecture',
+        title: 'Structure Drives Behavior More Than People',
+        insight: 'Most recurring organizational or technical failures stem from system structure—stocks, feedback loops, and time delays—rather than bad luck or individual mistakes.',
+        takeaway: 'When an incident repeats, map the feedback loops and delays before blaming an operator.',
+        bullets: [
+          'A system’s real purpose is revealed by its actual outcomes, not its stated mission.',
+          'Stocks create inertia; changes rarely take effect instantaneously.',
+          'Time delays between action and feedback often trigger overcorrection and oscillation.'
+        ],
+        sourceTitle: 'Thinking in Systems: A Primer',
+        author: 'Donella H. Meadows',
+        sourceUrl: 'https://businessbookclub.substack.com/p/thinking-in-systems-summary',
+        readMinutes: 2,
+        likes: 148,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sec-1',
+        topic: 'Cybersecurity & NAC',
+        title: 'Zero Trust Eliminates Implicit Location Trust',
+        insight: 'Under NIST SP 800-207, users and devices receive no implicit trust solely because they sit on an internal network or are organization-owned. Every session requires explicit verification.',
+        takeaway: 'Treat internal VLANs as untrusted by default and authenticate device posture before granting resource access.',
+        bullets: [
+          'All data sources and computing services are treated as discrete resources.',
+          'Access to individual enterprise resources is granted on a per-session basis.',
+          'Policy decisions incorporate dynamic device posture, identity, and behavioral context.'
+        ],
+        sourceTitle: 'NIST SP 800-207: Zero Trust Architecture',
+        author: 'NIST',
+        sourceUrl: 'https://csrc.nist.gov/pubs/sp/800/207/final',
+        readMinutes: 2,
+        likes: 192,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: 'Aligns directly with post-connect NAC posture checks before VLAN or firewall enforcement.'
+      },
+      {
+        id: 'foc-1',
+        topic: 'Focus & Habits',
+        title: 'Deep Work Produces Rare, Hard-to-Replicate Value',
+        insight: 'Distraction-free concentration pushes cognitive capabilities to their limit. It is the core engine for quickly mastering hard technical skills and producing elite-level output.',
+        takeaway: 'Block an uninterrupted 90-minute morning window with chat and email completely closed.',
+        bullets: [
+          'Two core skills dominate modern technical work: learning hard things fast and producing at high quality.',
+          'Routines and rituals beat willpower when starting a deep session.',
+          'Track deep-work hours on a visible scoreboard to reinforce consistency.'
+        ],
+        sourceTitle: 'Deep Work',
+        author: 'Cal Newport',
+        sourceUrl: 'https://medium.com/@RationalBadger/my-7-takeaways-from-deep-work-by-cal-newport-76995619178c',
+        readMinutes: 2,
+        likes: 215,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sys-2',
+        topic: 'Systems & Architecture',
+        title: 'Intervene at Leverage Points, Not Just Parameters',
+        insight: 'Tweaking surface parameters (like buffer sizes or thresholds) is the weakest way to change a system. Changing information flows, rules, or underlying paradigms yields orders of magnitude more impact.',
+        takeaway: 'Before tuning a threshold, ask whether giving operators real-time visibility would solve the root cause.',
+        bullets: [
+          'Parameters and numbers sit near the bottom of the leverage hierarchy.',
+          'Adding or restoring feedback loops is a high-leverage, low-cost intervention.',
+          'The highest leverage point is questioning and shifting the system’s core paradigm.'
+        ],
+        sourceTitle: 'Leverage Points: Places to Intervene in a System',
+        author: 'Donella H. Meadows',
+        sourceUrl: 'https://donellameadows.org/archives/leverage-points-places-to-intervene-in-a-system/',
+        readMinutes: 2,
+        likes: 164,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sec-2',
+        topic: 'Cybersecurity & NAC',
+        title: 'The Seven Tenets of Dynamic Access Control',
+        insight: 'Zero Trust is not a single appliance—it is a continuous loop of asset monitoring, dynamic policy evaluation, and telemetry collection to sharpen security posture over time.',
+        takeaway: 'Pair continuous endpoint posture monitoring with automated policy enforcement and telemetry feedback.',
+        bullets: [
+          'Secure all communication regardless of network location.',
+          'Monitor and measure the integrity and security posture of all owned and associated assets.',
+          'Collect as much information as possible about assets, network infrastructure, and communications.'
+        ],
+        sourceTitle: 'NIST SP 800-207 Explained',
+        author: 'Portnox Security Guide',
+        sourceUrl: 'https://www.portnox.com/cybersecurity-101/zero-trust/nist-800-207-explained-zero-trust-architecture-and-where-network-access-control-fits/',
+        readMinutes: 1,
+        likes: 129,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sys-3',
+        topic: 'Systems & Architecture',
+        title: 'Optimize for Maintainability & Evolvability',
+        insight: 'Most software and infrastructure costs happen after initial deployment. Operability, simplicity, and evolvability matter far more over a system’s lifetime than clever initial shortcuts.',
+        takeaway: 'Document upgrade paths and rollback steps cleanly so future changes remain low-risk.',
+        bullets: [
+          'Good abstractions hide complexity without obscuring critical failure modes.',
+          'Operability means making routine tasks easy for engineering and ops teams.',
+          'Plan for schema and configuration evolution from day one.'
+        ],
+        sourceTitle: 'Designing Data-Intensive Applications',
+        author: 'Martin Kleppmann',
+        sourceUrl: 'https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/',
+        readMinutes: 2,
+        likes: 176,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'sys-4',
+        topic: 'Systems & Architecture',
+        title: 'The Three Ways: Flow, Feedback, Experimentation',
+        insight: 'High-performing IT teams optimize left-to-right flow, amplify right-to-left feedback loops so defects are caught early, and foster a culture of continual learning.',
+        takeaway: 'Never pass a known defect or undocumented workaround downstream; shorten the feedback loop instead.',
+        bullets: [
+          'First Way: Focus on fast, smooth flow of work from engineering to operations.',
+          'Second Way: Amplify feedback loops so problems are surfaced and fixed at the source.',
+          'Third Way: Institutionalize blameless postmortems and deliberate practice.'
+        ],
+        sourceTitle: 'The Three Ways of DevOps',
+        author: 'Gene Kim',
+        sourceUrl: 'https://itrevolution.com/articles/the-three-ways-principles-underpinning-devops/',
+        readMinutes: 1,
+        likes: 141,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'foc-2',
+        topic: 'Focus & Habits',
+        title: 'Take Breaks from Focus, Not from Distraction',
+        insight: 'Checking your phone every time you feel bored trains your brain to crave constant novelty, destroying your stamina for deep problem-solving.',
+        takeaway: 'Schedule specific times to check messages; outside those windows, sit with boredom instead of reaching for a feed.',
+        bullets: [
+          'Constant context-switching leaves "attention residue" that degrades cognitive performance.',
+          'Embracing boredom in queues or commutes rebuilds your concentration muscle.',
+          'Drain shallow work by batching administrative tasks into fixed afternoon blocks.'
+        ],
+        sourceTitle: 'Deep Work',
+        author: 'Cal Newport',
+        sourceUrl: 'https://medium.com/@RationalBadger/my-7-takeaways-from-deep-work-by-cal-newport-76995619178c',
+        readMinutes: 1,
+        likes: 184,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'foc-3',
+        topic: 'Focus & Habits',
+        title: 'Tiny 1% Habits Compound via Four Laws',
+        insight: 'Lasting habits rarely come from massive bursts of motivation. Small 1% improvements compound over time when you make good behaviors obvious, attractive, easy, and satisfying.',
+        takeaway: 'Reduce friction to two minutes—set up your workspace the night before so starting is effortless.',
+        bullets: [
+          'Make it obvious: design visual cues in your environment.',
+          'Make it easy: lower the activation energy required to begin.',
+          'Invert the Four Laws to break bad habits (make them invisible and difficult).'
+        ],
+        sourceTitle: 'Atomic Habits Summary',
+        author: 'James Clear',
+        sourceUrl: 'https://jamesclear.com/atomic-habits-summary',
+        readMinutes: 2,
+        likes: 263,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'fin-1',
+        topic: 'Finance & Decisions',
+        title: 'Behavior Beats Pure Financial Knowledge',
+        insight: 'Financial outcomes are governed less by spreadsheet intelligence and more by how you behave under uncertainty—managing ego, fear, and patience over decades.',
+        takeaway: 'Build a personal margin of safety so you are never forced to sell or react during a downturn.',
+        bullets: [
+          'How you behave under stress matters more than what you know in calm markets.',
+          'Leave room for error in every financial plan—volatility is a fee, not a fine.',
+          'Avoid comparing your strategy to people playing a completely different time-horizon game.'
+        ],
+        sourceTitle: 'The Psychology of Money',
+        author: 'Morgan Housel',
+        sourceUrl: 'https://www.sloww.co/psychology-of-money-book/',
+        readMinutes: 2,
+        likes: 208,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'fin-2',
+        topic: 'Finance & Decisions',
+        title: 'Define "Enough" and Value Time Autonomy',
+        insight: 'The highest dividend money pays is control over your time. Without a clear definition of "enough," lifestyle creep silently erodes your freedom.',
+        takeaway: 'Benchmark major purchases against the hours of personal autonomy they cost, not just their sticker price.',
+        bullets: [
+          'Wealth is what you don’t see—unspent savings that buy future options.',
+          'Resist moving the goalposts once your core needs and security are covered.',
+          'Time autonomy consistently outperforms material upgrades for long-term satisfaction.'
+        ],
+        sourceTitle: 'The Psychology of Money',
+        author: 'Morgan Housel',
+        sourceUrl: 'https://www.affiancefinancial.com/news/morgan-housels-psychology-of-money',
+        readMinutes: 1,
+        likes: 175,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      },
+      {
+        id: 'phi-1',
+        topic: 'Philosophy & Stoicism',
+        title: 'Govern the Rational Mind & Accept What You Cannot Control',
+        insight: 'External events cannot harm your character unless you let them distort your judgment. Focus your energy on sober decision-making, honesty, and cheerfulness in the face of obstacles.',
+        takeaway: 'Separate any frustrating situation into two columns: what you control (your response) and what you do not.',
+        bullets: [
+          'Value reason above petty distractions and reactive outrage.',
+          'Make sober decisions and commit firmly to the chosen course.',
+          'Accept change and imperfection in others without losing your own composure.'
+        ],
+        sourceTitle: 'Meditations',
+        author: 'Marcus Aurelius',
+        sourceUrl: 'https://dailystoic.com/meditations-marcus-aurelius/',
+        readMinutes: 2,
+        likes: 234,
+        liked: false,
+        stashed: false,
+        read: false,
+        note: ''
+      }
+    ];
+
+    const SUPABASE_URL = 'https://hikjhdcsqofflcgfrevp.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_sWHf-16t1hyeEzwkpFn8Ow_dPNI8R8J';
+    let sbClient = null;
+    let currentUser = null;
+    let authMode = 'signin';
+
+    try {
+      if (window.supabase && typeof window.supabase.createClient === 'function') {
+        sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    } catch (e) {
+      sbClient = null;
+    }
+
+    function getUserScope() {
+      return (currentUser && currentUser.id) ? currentUser.id : 'guest';
+    }
+    function getStorageKeys() {
+      const scope = getUserScope();
+      return {
+        ideas: 'ideashots_state_v4_' + scope,
+        news: 'ideashots_news_v2_' + scope,
+        interests: 'ideashots_interests_v3_' + scope
+      };
+    }
+
+    let state = {
+      ideas: structuredClone(INITIAL_IDEAS),
+      news: structuredClone(INITIAL_NEWS),
+      activeTab: 'review',
+      activeTopic: 'All',
+      searchQuery: '',
+      sortBy: 'recommended',
+      reviewIndex: 0,
+      newsIndex: 0,
+      dailyGoal: 20,
+      cloudReadDates: {},
+      ideaInterests: {
+        topics: [],
+        keywords: []
+      },
+      newsInterests: {
+        topics: [],
+        keywords: []
+      }
+    };
+
+    function resetToFreshDefaults() {
+      state.ideas = structuredClone(INITIAL_IDEAS);
+      state.news = structuredClone(INITIAL_NEWS);
+      state.ideaInterests = { topics: [], keywords: [] };
+      state.newsInterests = { topics: [], keywords: [] };
+      state.reviewIndex = 0;
+      state.newsIndex = 0;
+      state.cloudReadDates = {};
+    }
+
+    function loadState() {
+      resetToFreshDefaults();
+      try {
+        const keys = getStorageKeys();
+        const raw = localStorage.getItem(keys.ideas);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed.ideas) && parsed.ideas.length > 0) {
+            state.ideas = parsed.ideas;
+          }
+        }
+        const rawNews = localStorage.getItem(keys.news);
+        if (rawNews) {
+          const parsedNews = JSON.parse(rawNews);
+          if (Array.isArray(parsedNews.news) && parsedNews.news.length > 0) {
+            state.news = parsedNews.news;
+          }
+        }
+        const rawInt = localStorage.getItem(keys.interests);
+        if (rawInt) {
+          const parsedInt = JSON.parse(rawInt);
+          if (parsedInt.ideaInterests) state.ideaInterests = parsedInt.ideaInterests;
+          if (parsedInt.newsInterests) state.newsInterests = parsedInt.newsInterests;
+        }
+      } catch (e) {
+        // Ignore storage errors in restricted environments
+      }
+    }
+
+    function saveState() {
+      try {
+        const keys = getStorageKeys();
+        localStorage.setItem(keys.ideas, JSON.stringify({ ideas: state.ideas }));
+        localStorage.setItem(keys.news, JSON.stringify({ news: state.news }));
+        localStorage.setItem(keys.interests, JSON.stringify({
+          ideaInterests: state.ideaInterests,
+          newsInterests: state.newsInterests
+        }));
+      } catch (e) {
+        // Ignore storage errors
+      }
+    }
+
+    async function syncCardStateToCloud(item) {
+      if (!sbClient || !currentUser || !item) return;
+      try {
+        await sbClient.from('user_card_state').upsert({
+          user_id: currentUser.id,
+          card_id: item.id,
+          liked: Boolean(item.liked),
+          stashed: Boolean(item.stashed),
+          read: Boolean(item.read),
+          note: item.note || '',
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id,card_id' });
+      } catch (e) {}
+    }
+
+    async function syncInterestsToCloud() {
+      if (!sbClient || !currentUser) return;
+      try {
+        await sbClient.from('user_interests').upsert({
+          user_id: currentUser.id,
+          idea_interests: state.ideaInterests,
+          news_interests: state.newsInterests,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+      } catch (e) {}
+    }
+
+    async function syncCustomIdeaToCloud(idea) {
+      if (!sbClient || !currentUser || !idea) return;
+      try {
+        await sbClient.from('custom_ideas').upsert({
+          id: idea.id,
+          user_id: currentUser.id,
+          payload: idea
+        }, { onConflict: 'id' });
+      } catch (e) {}
+    }
+
+    async function loadFromCloud() {
+      if (!sbClient || !currentUser) return;
+      loadState();
+      try {
+        const [cardsRes, intRes, customRes] = await Promise.all([
+          sbClient.from('user_card_state').select('*').eq('user_id', currentUser.id),
+          sbClient.from('user_interests').select('*').eq('user_id', currentUser.id).maybeSingle(),
+          sbClient.from('custom_ideas').select('*').eq('user_id', currentUser.id)
+        ]);
+
+        if (customRes.data && Array.isArray(customRes.data)) {
+          customRes.data.forEach(row => {
+            if (!row.payload) return;
+            if (row.payload.isNews) {
+              if (!state.news.some(n => n.id === row.id)) state.news.unshift(row.payload);
+            } else {
+              if (!state.ideas.some(i => i.id === row.id)) state.ideas.unshift(row.payload);
+            }
+          });
+        }
+
+        if (cardsRes.data && Array.isArray(cardsRes.data)) {
+          const map = new Map(cardsRes.data.map(r => [r.card_id, r]));
+          state.cloudReadDates = {};
+          cardsRes.data.forEach(r => {
+            if (r.read) {
+              state.cloudReadDates[r.card_id] = isoToLocalDateKey(r.updated_at);
+            }
+          });
+          state.ideas.forEach(item => {
+            const r = map.get(item.id);
+            if (r) {
+              if (r.liked && !item.liked) item.likes += 1;
+              item.liked = Boolean(r.liked);
+              item.stashed = Boolean(r.stashed);
+              item.read = Boolean(r.read);
+              if (item.read) item.readDate = isoToLocalDateKey(r.updated_at);
+              item.note = r.note || item.note || '';
+            }
+          });
+          state.news.forEach(item => {
+            const r = map.get(item.id);
+            if (r) {
+              if (r.liked && !item.liked) item.likes += 1;
+              item.liked = Boolean(r.liked);
+              item.stashed = Boolean(r.stashed);
+              item.read = Boolean(r.read);
+              if (item.read) item.readDate = isoToLocalDateKey(r.updated_at);
+              item.note = r.note || item.note || '';
+            }
+          });
+        }
+
+        let hasSavedInterests = false;
+        if (intRes.data) {
+          if (intRes.data.idea_interests) state.ideaInterests = intRes.data.idea_interests;
+          if (intRes.data.news_interests) state.newsInterests = intRes.data.news_interests;
+          const totalChosen = (state.ideaInterests.topics || []).length + (state.ideaInterests.keywords || []).length + (state.newsInterests.topics || []).length + (state.newsInterests.keywords || []).length;
+          if (totalChosen > 0) hasSavedInterests = true;
+        }
+
+        saveState();
+        renderAll();
+
+        let onboarded = false;
+        try {
+          onboarded = localStorage.getItem('ideashots_onboarded_' + currentUser.id) === '1';
+        } catch (e) {}
+        if (!hasSavedInterests && !onboarded) {
+          openWelcomeInterestsModal();
+        }
+      } catch (e) {
+        // Keep local state on network error
+      }
+    }
+
+    function updateAuthUi() {
+      const label = document.getElementById('authBtnLabel');
+      const outView = document.getElementById('authSignedOutView');
+      const inView = document.getElementById('authSignedInView');
+      const emailEl = document.getElementById('authUserEmail');
+      const titleEl = document.getElementById('authModalTitle');
+      if (currentUser) {
+        const metaName = currentUser.user_metadata && currentUser.user_metadata.username;
+        const shortName = (metaName && metaName.trim()) ? metaName.trim() : (currentUser.email || 'Account').split('@')[0];
+        if (label) label.textContent = shortName;
+        if (outView) outView.classList.add('hidden');
+        if (inView) inView.classList.remove('hidden');
+        if (emailEl) emailEl.textContent = currentUser.email || '';
+        if (titleEl) titleEl.textContent = 'Your Account';
+      } else {
+        if (label) label.textContent = 'Sign In';
+        if (outView) outView.classList.remove('hidden');
+        if (inView) inView.classList.add('hidden');
+        if (titleEl) titleEl.textContent = authMode === 'signin' ? 'Sign in to IdeaShots' : 'Create IdeaShots Account';
+      }
+    }
+
+    let toastTimer = null;
+    let toastUndoHandler = null;
+    function showToast(msg, onUndo = null) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toastText');
+      const undoBtn = document.getElementById('toastUndoBtn');
+      toastText.textContent = msg;
+      toastUndoHandler = onUndo;
+      if (onUndo) {
+        undoBtn.classList.remove('hidden');
+      } else {
+        undoBtn.classList.add('hidden');
+      }
+      toast.classList.remove('hidden');
+      toast.classList.add('flex');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('flex');
+        toastUndoHandler = null;
+      }, onUndo ? 3600 : 2200);
+    }
+
+    document.getElementById('toastUndoBtn').addEventListener('click', () => {
+      if (typeof toastUndoHandler === 'function') {
+        const fn = toastUndoHandler;
+        toastUndoHandler = null;
+        document.getElementById('toast').classList.add('hidden');
+        document.getElementById('toast').classList.remove('flex');
+        fn();
+      }
+    });
+
+    function getLocalDateKey(offsetDays = 0) {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function isoToLocalDateKey(iso) {
+      if (!iso) return getLocalDateKey();
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return getLocalDateKey();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function getTodayReadCount() {
+      const today = getLocalDateKey();
+      const seen = new Set();
+      let count = 0;
+      for (const i of [...state.ideas, ...state.news]) {
+        if (i.read && i.readDate === today) {
+          seen.add(i.id);
+          count += 1;
+        }
+      }
+      for (const [cid, dKey] of Object.entries(state.cloudReadDates || {})) {
+        if (!seen.has(cid) && dKey === today) {
+          count += 1;
+        }
+      }
+      return count;
+    }
+
+    function getStreakDays() {
+      const dates = new Set(
+        [
+          ...[...state.ideas, ...state.news].filter(i => i.read && i.readDate).map(i => i.readDate),
+          ...Object.values(state.cloudReadDates || {})
+        ].filter(Boolean)
+      );
+      if (dates.size === 0) return 0;
+      let streak = 0;
+      let offset = dates.has(getLocalDateKey(0)) ? 0 : (dates.has(getLocalDateKey(-1)) ? -1 : null);
+      if (offset === null) return 0;
+      while (dates.has(getLocalDateKey(offset))) {
+        streak += 1;
+        offset -= 1;
+      }
+      return streak;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getTodaySeed() {
+      const d = new Date();
+      return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate() + (state.interests.dailyOffset || 0);
+    }
+
+    function getTodayIdeas() {
+      const topics = state.ideaInterests.topics || [];
+      const keywords = (state.ideaInterests.keywords || []).map(k => k.toLowerCase());
+      const seed = getTodaySeed();
+      const q = state.searchQuery.trim().toLowerCase();
+
+      const scored = state.ideas.map((idea, idx) => {
+        let score = 0;
+        if (topics.includes(idea.topic)) score += 10;
+        const hay = `${idea.title} ${idea.insight} ${idea.takeaway} ${idea.topic} ${idea.author} ${idea.sourceTitle}`.toLowerCase();
+        for (const kw of keywords) {
+          if (hay.includes(kw)) score += 12;
+        }
+        if (!idea.read) score += 5;
+        // Deterministic daily rotation tie-breaker
+        const rot = ((idx * 37 + seed * 13) % 100) / 100;
+        return { idea, score: score + rot };
+      });
+
+      let list = scored.sort((a, b) => b.score - a.score).map(x => x.idea);
+      if (q) {
+        list = list.filter(i =>
+          i.title.toLowerCase().includes(q) ||
+          i.insight.toLowerCase().includes(q) ||
+          i.takeaway.toLowerCase().includes(q) ||
+          i.author.toLowerCase().includes(q) ||
+          i.sourceTitle.toLowerCase().includes(q) ||
+          i.topic.toLowerCase().includes(q)
+        );
+        return list;
+      }
+      return list;
+    }
+
+    function getFilteredIdeas() {
+      let list = state.activeTab === 'stash'
+        ? [...state.ideas, ...state.news].filter(i => i.stashed)
+        : state.ideas.slice();
+      if (state.activeTopic !== 'All') {
+        list = list.filter(i => i.topic === state.activeTopic);
+      }
+      const q = state.searchQuery.trim().toLowerCase();
+      if (q) {
+        list = list.filter(i =>
+          i.title.toLowerCase().includes(q) ||
+          i.insight.toLowerCase().includes(q) ||
+          i.takeaway.toLowerCase().includes(q) ||
+          i.author.toLowerCase().includes(q) ||
+          i.sourceTitle.toLowerCase().includes(q) ||
+          i.topic.toLowerCase().includes(q)
+        );
+      }
+      if (state.sortBy === 'most-liked') {
+        list.sort((a, b) => b.likes - a.likes);
+      } else if (state.sortBy === 'quickest') {
+        list.sort((a, b) => a.readMinutes - b.readMinutes);
+      }
+      return list;
+    }
+
+    function updateHeaderMetrics() {
+
+
+      const readCount = getTodayReadCount();
+      const streak = getStreakDays();
+      const streakBadge = streak > 0 ? ` · ${streak}d` : '';
+      const goalText = document.getElementById('dailyGoalText');
+      const goalPill = document.getElementById('dailyGoalPill');
+      goalText.textContent = readCount >= state.dailyGoal
+        ? `${readCount} ★${streakBadge}`
+        : `${readCount}/${state.dailyGoal}${streakBadge}`;
+      if (readCount >= state.dailyGoal) {
+        goalPill.className = 'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold';
+      } else {
+        goalPill.className = 'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 text-xs font-semibold';
+      }
+
+
+    }
+
+    function renderTabs() {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.dataset.tab === state.activeTab;
+        if (isActive) {
+          btn.classList.add('bg-[#C7A17A]/25', 'text-[#22333B]', 'dark:bg-[#5E8B7E]/30', 'dark:text-[#EFF3F1]');
+          btn.classList.remove('text-gray-600', 'hover:bg-gray-100', 'dark:text-gray-300', 'dark:hover:bg-[#1E2F37]');
+        } else {
+          btn.classList.remove('bg-[#C7A17A]/25', 'text-[#22333B]', 'dark:bg-[#5E8B7E]/30', 'dark:text-[#EFF3F1]');
+          btn.classList.add('text-gray-600', 'hover:bg-gray-100', 'dark:text-gray-300', 'dark:hover:bg-[#1E2F37]');
+        }
+      });
+
+      const isReview = state.activeTab === 'review';
+      const isNews = state.activeTab === 'news';
+      const isInterests = state.activeTab === 'interests';
+      const isFeed = !isReview && !isNews && !isInterests;
+
+      document.getElementById('interestsSection').classList.toggle('hidden', !isInterests);
+      document.getElementById('topicFilterBar').classList.toggle('hidden', !isFeed);
+      document.getElementById('sortContainer').classList.toggle('hidden', !isFeed);
+      document.getElementById('feedSection').classList.toggle('hidden', !isFeed);
+      document.getElementById('reviewSection').classList.toggle('hidden', !isReview);
+      document.getElementById('newsSection').classList.toggle('hidden', !isNews);
+
+      const q = state.searchQuery.trim();
+      const alreadyFollowed = q && (
+        state.ideaInterests.topics.some(t => t.toLowerCase() === q.toLowerCase()) ||
+        state.ideaInterests.keywords.some(k => k.toLowerCase() === q.toLowerCase())
+      );
+      const followBar = document.getElementById('searchFollowBar');
+      if (q && q.length >= 2 && !alreadyFollowed && isFeed) {
+        document.getElementById('searchFollowTerm').textContent = `"${q}"`;
+        followBar.classList.remove('hidden');
+        followBar.classList.add('flex');
+      } else {
+        followBar.classList.add('hidden');
+        followBar.classList.remove('flex');
+      }
+    }
+
+    function renderTopics() {
+      const customTopics = (state.ideaInterests.keywords || []).map(toTitleCase);
+      const topics = ['All', ...new Set([...customTopics, ...IDEA_TOPICS, 'Live Discovery'])];
+      const host = document.getElementById('topicPills');
+      host.innerHTML = topics.map(topic => {
+        const active = state.activeTopic === topic;
+        const cls = active
+          ? 'bg-[#C7A17A] text-[#22333B] border-[#C7A17A] dark:bg-[#5E8B7E] dark:text-white dark:border-[#5E8B7E] shadow-xs'
+          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-800 dark:hover:border-[#334D59] dark:hover:text-white';
+        return `<button type="button" data-topic="${escapeHtml(topic)}" class="topic-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition cursor-pointer ${cls}">${escapeHtml(topic)}</button>`;
+      }).join('');
+    }
+
+    function buildCardHtml(idea) {
+      const meta = getTopicStyle(idea.topic);
+      const likeCls = idea.liked ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800/70' : 'text-[#3B525D] dark:text-[#C5D5CE] hover:bg-gray-100 dark:hover:bg-[#1E2F37] border-transparent';
+      const stashCls = idea.stashed ? 'text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800/70' : 'text-[#3B525D] dark:text-[#C5D5CE] hover:bg-gray-100 dark:hover:bg-[#1E2F37] border-transparent';
+      const sourceLink = idea.sourceUrl
+        ? `<a href="${escapeHtml(idea.sourceUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center gap-1 text-xs font-medium text-[#8A633C] dark:text-[#8CC0B0] hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline truncate max-w-full">
+             <span class="truncate">${escapeHtml(idea.sourceTitle)}</span>
+             <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+           </a>`
+        : `<span class="text-xs font-medium text-gray-500 truncate">${escapeHtml(idea.sourceTitle)}</span>`;
+
+      return `
+        <article data-id="${escapeHtml(idea.id)}" class="idea-card card-hover min-w-0 bg-white dark:bg-[#18262D] rounded-2xl border border-[#DCE3DF] dark:border-[#243740] dark:hover:border-[#334D59] p-4 sm:p-5 flex flex-col justify-between cursor-pointer break-words">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border ${meta.badge}">${escapeHtml(idea.topic)}</span>
+              <div class="flex items-center gap-2 text-[11px] font-medium text-gray-400">
+                ${idea.read ? '<span class="text-emerald-600 font-semibold">&#10003; Read</span>' : ''}
+                <span>${idea.readMinutes} min</span>
+              </div>
+            </div>
+
+            <h3 class="text-base font-bold text-[#22333B] dark:text-[#EFF3F1] leading-snug mb-2">${escapeHtml(idea.title)}</h3>
+            <p class="text-sm text-[#3B525D] dark:text-[#C5D5CE] leading-relaxed mb-4">${escapeHtml(idea.insight)}</p>
+
+            <div class="rounded-xl border p-3 mb-4 ${meta.tint}">
+              <div class="text-[11px] font-bold uppercase tracking-wider mb-1 opacity-80">Apply It</div>
+              <p class="text-xs font-medium leading-relaxed">${escapeHtml(idea.takeaway)}</p>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-[#DCE3DF] dark:border-[#243740]">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div class="min-w-0">
+                ${sourceLink}
+                <div class="text-[11px] text-gray-400 truncate">by ${escapeHtml(idea.author)}</div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <button type="button" data-action="like" data-id="${escapeHtml(idea.id)}" class="action-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-sm font-semibold transition cursor-pointer ${likeCls}" aria-label="Like">
+                  <svg class="w-5 h-5" fill="${idea.liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  <span>${idea.likes}</span>
+                </button>
+                <button type="button" data-action="stash" data-id="${escapeHtml(idea.id)}" class="action-btn inline-flex items-center justify-center px-3.5 py-2 rounded-xl border transition cursor-pointer ${stashCls}" aria-label="Save to stash" title="Save to stash">
+                  <svg class="w-5 h-5" fill="${idea.stashed ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                </button>
+              </div>
+              <button type="button" data-action="copy" data-id="${escapeHtml(idea.id)}" class="action-btn p-2 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#1E2F37] transition cursor-pointer" title="Copy insight" aria-label="Copy insight">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderFeed() {
+      const list = getFilteredIdeas();
+      const grid = document.getElementById('feedGrid');
+      const empty = document.getElementById('emptyState');
+
+      if (list.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        if (state.activeTab === 'stash' && !state.searchQuery && state.activeTopic === 'All') {
+          document.getElementById('emptyTitle').textContent = 'Your Stash is empty';
+          document.getElementById('emptyDesc').textContent = 'Bookmark ideas from Discover to build your personal knowledge library.';
+          document.getElementById('emptyActionBtn').textContent = 'Browse Discover';
+        } else {
+          document.getElementById('emptyTitle').textContent = 'No matching ideas';
+          document.getElementById('emptyDesc').textContent = 'Try clearing your search or switching topics to explore more insights.';
+          document.getElementById('emptyActionBtn').textContent = 'Reset Filters';
+        }
+        return;
+      }
+
+      empty.classList.add('hidden');
+      grid.innerHTML = list.map(buildCardHtml).join('');
+      const infFooter = document.getElementById('infiniteFooter');
+      if (infFooter) {
+        infFooter.classList.toggle('hidden', state.activeTab === 'stash' || state.activeTab === 'review');
+      }
+    }
+
+    var isFetchingMore = false;
+
+    function scoreByInterests(item, interestObj) {
+      const topics = (interestObj && interestObj.topics) || [];
+      const kws = ((interestObj && interestObj.keywords) || []).map(k => k.toLowerCase());
+      let score = 0;
+      if (topics.includes(item.topic)) score += 10;
+      const hay = `${item.title} ${item.insight} ${item.takeaway} ${item.topic} ${item.author}`.toLowerCase();
+      for (const kw of kws) {
+        if (hay.includes(kw)) score += 12;
+      }
+      return score;
+    }
+
+    function getUnreadFlashcards() {
+      const list = state.ideas.filter(i => !i.read);
+      if ((state.ideaInterests.topics || []).length === 0 && (state.ideaInterests.keywords || []).length === 0) {
+        return list;
+      }
+      return list.slice().sort((a, b) => scoreByInterests(b, state.ideaInterests) - scoreByInterests(a, state.ideaInterests));
+    }
+
+    let currentReelIds = [];
+    let currentNewsReelIds = [];
+    var isFetchingNews = false;
+    let newsDaysBack = 0;
+    let isAnimatingSwipe = false;
+
+    function buildSwipeCardHtml(idea, isBackCard = false) {
+      const meta = getTopicStyle(idea.topic);
+      const likeCls = idea.liked ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800/70' : 'text-[#22333B] dark:text-[#DCE6E2] bg-white dark:bg-[#142026] border-[#DCE3DF] dark:border-[#2A404A] hover:bg-gray-50 dark:hover:bg-[#1E2F37]';
+      const stashCls = idea.stashed ? 'text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800/70' : 'text-[#22333B] dark:text-[#DCE6E2] bg-white dark:bg-[#142026] border-[#DCE3DF] dark:border-[#2A404A] hover:bg-gray-50 dark:hover:bg-[#1E2F37]';
+
+      if (isBackCard) {
+        return `
+          <div aria-hidden="true" class="absolute inset-0 bg-white dark:bg-[#18262D] rounded-3xl border border-[#DCE3DF] dark:border-[#243740] shadow-xs p-5 sm:p-7 scale-[0.96] translate-y-2 opacity-60 pointer-events-none">
+            <span class="px-3 py-1 rounded-full text-xs font-bold border ${meta.badge}">${escapeHtml(idea.topic)}</span>
+            <h3 class="text-lg sm:text-xl font-extrabold text-[#22333B] dark:text-[#EFF3F1] leading-tight mt-3">${escapeHtml(idea.title)}</h3>
+          </div>
+        `;
+      }
+
+      return `
+        <div data-swipe-id="${escapeHtml(idea.id)}" class="swipe-card card-enter absolute inset-0 bg-white dark:bg-[#18262D] rounded-3xl border border-[#DCE3DF] dark:border-[#243740] shadow-md p-4 sm:p-7 flex flex-col justify-between break-words overflow-hidden">
+          <div class="flex-1 min-h-0 overflow-y-auto no-scrollbar pr-0.5">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="px-3 py-1 rounded-full text-xs font-bold border ${meta.badge}">${escapeHtml(idea.topic)}</span>
+              <span class="text-xs font-medium ${idea.read ? 'text-emerald-600 font-semibold' : 'text-gray-400'}">${idea.read ? '&#10003; Read' : `${idea.readMinutes} min read`}</span>
+            </div>
+            <h3 class="text-lg sm:text-2xl font-extrabold text-[#22333B] dark:text-[#EFF3F1] leading-tight mb-2.5">${escapeHtml(idea.title)}</h3>
+            <p class="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3.5">${escapeHtml(idea.insight)}</p>
+
+            ${(idea.bullets && idea.bullets.length) ? `
+              <ul class="space-y-1.5 mb-3.5">
+                ${idea.bullets.map(b => `
+                  <li class="flex items-start gap-2 text-xs sm:text-sm text-[#3B525D] dark:text-[#C5D5CE]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#C7A17A] dark:bg-[#5E8B7E] mt-1.5 shrink-0"></span>
+                    <span>${escapeHtml(b)}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            ` : ''}
+
+            <div class="rounded-2xl border p-3.5 ${meta.tint}">
+              <div class="text-[11px] font-bold uppercase tracking-wider mb-1 opacity-80">Actionable Takeaway</div>
+              <p class="text-xs sm:text-sm font-semibold leading-relaxed">${escapeHtml(idea.takeaway)}</p>
+            </div>
+          </div>
+
+          <div class="pt-3 mt-2 border-t border-[#DCE3DF] dark:border-[#243740] flex items-center justify-between gap-3 shrink-0">
+            <div class="text-xs text-[#556B75] dark:text-[#9BB2AA] min-w-0 truncate">
+              ${idea.sourceUrl ? `<a href="${escapeHtml(idea.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="font-semibold text-[#8A633C] dark:text-[#8CC0B0] hover:underline">${escapeHtml(idea.sourceTitle)} &nearr;</a>` : `<span class="font-semibold">${escapeHtml(idea.sourceTitle)}</span>`}
+              <div class="text-[11px] text-gray-400 truncate">${escapeHtml(idea.author)}</div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" data-action="like" data-id="${escapeHtml(idea.id)}" class="action-btn inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-sm sm:text-base font-bold transition cursor-pointer ${likeCls}" aria-label="Like">
+                <svg class="w-6 h-6" fill="${idea.liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                <span>${idea.likes}</span>
+              </button>
+              <button type="button" data-action="stash" data-id="${escapeHtml(idea.id)}" class="action-btn inline-flex items-center justify-center px-4 py-2.5 rounded-2xl border transition cursor-pointer ${stashCls}" aria-label="Save to stash" title="Save to stash">
+                <svg class="w-6 h-6" fill="${idea.stashed ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function attachSwipeHandlers(cardEl, mode) {
+      if (!cardEl) return;
+      let startY = 0;
+      let startX = 0;
+      let deltaY = 0;
+      let dragging = false;
+
+      let lastTapTime = 0;
+      cardEl.addEventListener('pointerdown', e => {
+        if (e.target.closest('button') || e.target.closest('a')) return;
+        if (isAnimatingSwipe) return;
+        const now = Date.now();
+        if (now - lastTapTime < 280) {
+          lastTapTime = 0;
+          const id = cardEl.dataset.swipeId;
+          if (id) {
+            toggleLike(id);
+            showToast('Liked!');
+          }
+          return;
+        }
+        lastTapTime = now;
+        startY = e.clientY;
+        startX = e.clientX;
+        deltaY = 0;
+        dragging = true;
+        cardEl.classList.add('dragging');
+        cardEl.setPointerCapture(e.pointerId);
+      });
+
+      cardEl.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        deltaY = e.clientY - startY;
+        const deltaX = (e.clientX - startX) * 0.25;
+        const rot = Math.max(-8, Math.min(8, deltaY * -0.02));
+        const op = Math.max(0.45, 1 - Math.abs(deltaY) / 360);
+        cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rot}deg)`;
+        cardEl.style.opacity = String(op);
+      });
+
+      function endDrag() {
+        if (!dragging) return;
+        dragging = false;
+        cardEl.classList.remove('dragging');
+        if (deltaY < -75) {
+          stepDeck(mode, 1);
+        } else if (deltaY > 75) {
+          stepDeck(mode, -1);
+        } else {
+          cardEl.style.transform = '';
+          cardEl.style.opacity = '';
+        }
+      }
+
+      cardEl.addEventListener('pointerup', endDrag);
+      cardEl.addEventListener('pointercancel', endDrag);
+    }
+
+    function stepDeck(mode, dir) {
+      if (isAnimatingSwipe) return;
+      const isNews = mode === 'news';
+      const host = document.getElementById(isNews ? 'newsCardHost' : 'reviewCardHost');
+      const cardEl = host.querySelector('.swipe-card');
+      const list = isNews ? getUnreadNews() : getUnreadFlashcards();
+      if (list.length === 0) return;
+
+      const idxKey = isNews ? 'newsIndex' : 'reviewIndex';
+      if (state[idxKey] >= list.length) state[idxKey] = 0;
+      const current = list[state[idxKey]];
+
+      isAnimatingSwipe = true;
+      if (cardEl) {
+        cardEl.style.transform = '';
+        cardEl.style.opacity = '';
+        cardEl.classList.add(dir > 0 ? 'swipe-out-up' : 'swipe-out-down');
+      }
+
+      setTimeout(() => {
+        if (dir > 0 && current && !current.read) {
+          current.read = true;
+          current.readDate = getLocalDateKey();
+          saveState();
+          syncCardStateToCloud(current);
+          updateHeaderMetrics();
+          showToast('Marked as read', () => {
+            current.read = false;
+            current.readDate = null;
+            saveState();
+            syncCardStateToCloud(current);
+            updateHeaderMetrics();
+            state[idxKey] = 0;
+            if (isNews) renderNewsDeck();
+            else renderReviewDeck();
+          });
+        }
+        const remaining = isNews ? getUnreadNews() : getUnreadFlashcards();
+        if (dir < 0 && remaining.length > 0) {
+          state[idxKey] = (state[idxKey] - 1 + remaining.length) % remaining.length;
+        } else if (state[idxKey] >= remaining.length) {
+          state[idxKey] = 0;
+        }
+        if (remaining.length <= 3) {
+          if (isNews && !isFetchingNews) loadMoreNews(5);
+          if (!isNews && !isFetchingMore) loadMoreIdeas(5);
+        }
+        isAnimatingSwipe = false;
+        if (isNews) renderNewsDeck();
+        else renderReviewDeck();
+      }, 240);
+    }
+
+    function updateReviewProgressUi() {
+      const readCount = getTodayReadCount();
+      const unreadCount = getUnreadFlashcards().length;
+      const pct = Math.min(100, Math.round((readCount / state.dailyGoal) * 100));
+      document.getElementById('reviewProgressBar').style.width = `${pct}%`;
+      document.getElementById('reviewCounter').textContent = `${unreadCount} unread`;
+    }
+
+    function renderReviewDeck() {
+      const host = document.getElementById('reviewCardHost');
+      const unread = getUnreadFlashcards();
+      updateReviewProgressUi();
+
+      if (unread.length === 0) {
+        currentReelIds = [];
+        host.innerHTML = `
+          <div class="absolute inset-0 bg-white dark:bg-[#18262D] rounded-3xl border border-[#DCE3DF] dark:border-[#243740] shadow-sm p-8 flex flex-col items-center justify-center text-center">
+            <div class="w-10 h-10 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin mx-auto mb-3"></div>
+            <h3 class="text-base font-bold text-[#22333B] dark:text-[#EFF3F1] mb-1">Generating fresh unread flashcards...</h3>
+            <p class="text-xs sm:text-sm text-[#556B75] dark:text-[#9BB2AA] mb-4">Pulling peer-reviewed &amp; expert ideas you haven't seen before.</p>
+            <button type="button" id="retryDeckFetchBtn" class="px-4 py-2 rounded-xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-xs font-semibold transition cursor-pointer">Load More Now</button>
+          </div>
+        `;
+        const retryBtn = document.getElementById('retryDeckFetchBtn');
+        if (retryBtn) retryBtn.addEventListener('click', () => loadMoreIdeas(5));
+        if (!isFetchingMore) loadMoreIdeas(5);
+        return;
+      }
+
+      if (state.reviewIndex >= unread.length) state.reviewIndex = 0;
+      if (state.reviewIndex < 0) state.reviewIndex = unread.length - 1;
+
+      const current = unread[state.reviewIndex];
+      const next = unread.length > 1 ? unread[(state.reviewIndex + 1) % unread.length] : null;
+      currentReelIds = [current.id];
+
+      host.innerHTML = (next ? buildSwipeCardHtml(next, true) : '') + buildSwipeCardHtml(current, false);
+      attachSwipeHandlers(host.querySelector('.swipe-card'), 'idea');
+
+      if (unread.length <= 3 && !isFetchingMore) {
+        loadMoreIdeas(5);
+      }
+    }
+
+    function openDetailModal(id) {
+      const idea = state.ideas.find(i => i.id === id) || state.news.find(i => i.id === id);
+      if (!idea) return;
+      if (!idea.read) {
+        idea.read = true;
+        saveState();
+        updateHeaderMetrics();
+        renderFeed();
+      }
+      const meta = getTopicStyle(idea.topic);
+      const modal = document.getElementById('detailModal');
+      const content = document.getElementById('detailModalContent');
+
+      content.innerHTML = `
+        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border mb-3 ${meta.badge}">${escapeHtml(idea.topic)}</span>
+        <h2 class="text-xl font-extrabold text-[#22333B] dark:text-[#EFF3F1] leading-snug mb-3 pr-8">${escapeHtml(idea.title)}</h2>
+        <p class="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-5">${escapeHtml(idea.insight)}</p>
+
+        ${(idea.bullets && idea.bullets.length) ? `
+          <div class="mb-5">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Key Points</h4>
+            <ul class="space-y-2">
+              ${idea.bullets.map(b => `
+                <li class="flex items-start gap-2.5 text-sm text-gray-700 dark:text-gray-300">
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#C7A17A] dark:bg-[#5E8B7E] mt-2 shrink-0"></span>
+                  <span>${escapeHtml(b)}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        <div class="rounded-xl border p-4 mb-5 ${meta.tint}">
+          <div class="text-xs font-bold uppercase tracking-wider mb-1 opacity-80">How to Apply</div>
+          <p class="text-sm font-semibold">${escapeHtml(idea.takeaway)}</p>
+        </div>
+
+        <div class="mb-5">
+          <label for="detailNoteInput" class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Your Personal Note</label>
+          <textarea id="detailNoteInput" rows="3" placeholder="Jot down how this applies to your current project..." class="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-[#2A404A] dark:bg-[#121E24] dark:text-gray-100 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none resize-none">${escapeHtml(idea.note || '')}</textarea>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[#DCE3DF] dark:border-[#243740]">
+          <div class="text-xs text-gray-500">
+            ${idea.sourceUrl ? `<a href="${escapeHtml(idea.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-600 hover:underline">${escapeHtml(idea.sourceTitle)} &nearr;</a>` : `<span class="font-semibold">${escapeHtml(idea.sourceTitle)}</span>`}
+            <span> &middot; ${escapeHtml(idea.author)}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" id="modalStashBtn" class="px-3.5 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${idea.stashed ? 'bg-[#C7A17A] text-[#22333B] border-[#C7A17A] dark:bg-[#5E8B7E] dark:text-white dark:border-[#5E8B7E]' : 'bg-white dark:bg-[#142026] text-[#22333B] dark:text-[#DCE6E2] border-gray-300 dark:border-[#2A404A] hover:bg-gray-50 dark:hover:bg-[#1E2F37]'}">
+              ${idea.stashed ? 'Stashed in Library' : 'Save to Stash'}
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('detailNoteInput').addEventListener('input', e => {
+        idea.note = e.target.value;
+        saveState();
+        syncCardStateToCloud(idea);
+      });
+
+      document.getElementById('modalStashBtn').addEventListener('click', () => {
+        toggleStash(idea.id);
+        openDetailModal(idea.id);
+      });
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeDetailModal() {
+      const modal = document.getElementById('detailModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function toggleLike(id) {
+      const idea = state.ideas.find(i => i.id === id) || state.news.find(i => i.id === id);
+      if (!idea) return;
+      idea.liked = !idea.liked;
+      idea.likes += idea.liked ? 1 : -1;
+      saveState();
+      if (idea.stashed && (idea.isAuto || idea.isNews || idea.isCustom)) {
+        syncCustomIdeaToCloud(idea);
+      }
+      syncCardStateToCloud(idea);
+      if (state.activeTab === 'review' || state.activeTab === 'news') {
+        const slide = document.querySelector(`[data-swipe-id="${CSS.escape(id)}"]`);
+        if (slide) {
+          const btn = slide.querySelector('[data-action="like"]');
+          if (btn) {
+            btn.className = `action-btn inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-sm sm:text-base font-bold transition cursor-pointer ${idea.liked ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800/70' : 'text-[#22333B] dark:text-[#DCE6E2] bg-white dark:bg-[#142026] border-[#DCE3DF] dark:border-[#2A404A] hover:bg-gray-50 dark:hover:bg-[#1E2F37]'}`;
+            const svg = btn.querySelector('svg');
+            if (svg) svg.setAttribute('fill', idea.liked ? 'currentColor' : 'none');
+            const span = btn.querySelector('span');
+            if (span) span.textContent = String(idea.likes);
+          }
+        }
+        renderFeed();
+      } else {
+        renderAll();
+      }
+    }
+
+    function toggleStash(id) {
+      const idea = state.ideas.find(i => i.id === id) || state.news.find(i => i.id === id);
+      if (!idea) return;
+      idea.stashed = !idea.stashed;
+      saveState();
+      syncCardStateToCloud(idea);
+      showToast(idea.stashed ? 'Saved to My Stash' : 'Removed from My Stash');
+      updateHeaderMetrics();
+      if (state.activeTab === 'review' || state.activeTab === 'news') {
+        const slide = document.querySelector(`[data-swipe-id="${CSS.escape(id)}"]`);
+        if (slide) {
+          const btn = slide.querySelector('[data-action="stash"]');
+          if (btn) {
+            btn.className = `action-btn inline-flex items-center justify-center px-4 py-2.5 rounded-2xl border transition cursor-pointer ${idea.stashed ? 'text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800/70' : 'text-[#22333B] dark:text-[#DCE6E2] bg-white dark:bg-[#142026] border-[#DCE3DF] dark:border-[#2A404A] hover:bg-gray-50 dark:hover:bg-[#1E2F37]'}`;
+            const svg = btn.querySelector('svg');
+            if (svg) svg.setAttribute('fill', idea.stashed ? 'currentColor' : 'none');
+          }
+        }
+        renderFeed();
+      } else {
+        renderAll();
+      }
+    }
+
+    function copyIdea(id) {
+      const idea = state.ideas.find(i => i.id === id) || state.news.find(i => i.id === id);
+      if (!idea) return;
+      const text = `${idea.title}\n${idea.insight}\nTakeaway: ${idea.takeaway} (${idea.sourceTitle} — ${idea.author})`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => showToast('Insight copied')).catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast('Insight copied');
+      } catch (e) {
+        showToast('Could not copy');
+      }
+      document.body.removeChild(ta);
+    }
+
+    function renderInterestsTab() {
+      const ideaTopicsHost = document.getElementById('ideaInterestTopicsList');
+      ideaTopicsHost.innerHTML = IDEA_TOPICS.map(topic => {
+        const active = state.ideaInterests.topics.includes(topic);
+        const cls = active
+          ? 'bg-[#C7A17A] text-[#22333B] border-[#C7A17A] dark:bg-[#5E8B7E] dark:text-white dark:border-[#5E8B7E]'
+          : 'bg-white dark:bg-[#142026] text-gray-700 dark:text-gray-300 border-gray-300 dark:border-[#2A404A] hover:border-indigo-400';
+        return `<button type="button" data-idea-topic="${escapeHtml(topic)}" class="idea-interest-topic-btn px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${cls}">${active ? '&#10003; ' : '+ '}${escapeHtml(topic)}</button>`;
+      }).join('');
+
+      const ideaKwHost = document.getElementById('ideaCustomKeywordsList');
+      const ideaKws = state.ideaInterests.keywords || [];
+      ideaKwHost.innerHTML = ideaKws.length
+        ? ideaKws.map(kw => `
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/70">
+              <span>#${escapeHtml(kw)}</span>
+              <button type="button" data-remove-idea-kw="${escapeHtml(kw)}" class="remove-idea-kw-btn hover:text-rose-600 cursor-pointer" aria-label="Remove keyword">&times;</button>
+            </span>
+          `).join('')
+        : '<span class="text-xs text-gray-400">No custom idea keywords yet.</span>';
+
+      const newsTopicsHost = document.getElementById('newsInterestTopicsList');
+      newsTopicsHost.innerHTML = NEWS_TOPICS.map(topic => {
+        const active = state.newsInterests.topics.includes(topic);
+        const cls = active
+          ? 'bg-[#C7A17A] text-[#22333B] border-[#C7A17A] dark:bg-[#5E8B7E] dark:text-white dark:border-[#5E8B7E]'
+          : 'bg-white dark:bg-[#142026] text-gray-700 dark:text-gray-300 border-gray-300 dark:border-[#2A404A] hover:border-sky-400';
+        return `<button type="button" data-news-topic="${escapeHtml(topic)}" class="news-interest-topic-btn px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${cls}">${active ? '&#10003; ' : '+ '}${escapeHtml(topic)}</button>`;
+      }).join('');
+
+      const newsKwHost = document.getElementById('newsCustomKeywordsList');
+      const newsKws = state.newsInterests.keywords || [];
+      newsKwHost.innerHTML = newsKws.length
+        ? newsKws.map(kw => `
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/70">
+              <span>#${escapeHtml(kw)}</span>
+              <button type="button" data-remove-news-kw="${escapeHtml(kw)}" class="remove-news-kw-btn hover:text-rose-600 cursor-pointer" aria-label="Remove keyword">&times;</button>
+            </span>
+          `).join('')
+        : '<span class="text-xs text-gray-400">No custom news keywords yet.</span>';
+    }
+
+    function getUnreadNews() {
+      const list = state.news.filter(n => !n.read);
+      if ((state.newsInterests.topics || []).length === 0 && (state.newsInterests.keywords || []).length === 0) {
+        return list;
+      }
+      return list.slice().sort((a, b) => scoreByInterests(b, state.newsInterests) - scoreByInterests(a, state.newsInterests));
+    }
+
+    function updateNewsProgressUi() {
+      const readCount = state.news.filter(n => n.read && n.readDate === getLocalDateKey()).length;
+      const unreadCount = getUnreadNews().length;
+      const pct = Math.min(100, Math.round((readCount / 10) * 100));
+      document.getElementById('newsProgressBar').style.width = `${pct}%`;
+      document.getElementById('newsCounter').textContent = `${readCount} read · ${unreadCount} unread`;
+    }
+
+    function renderNewsDeck() {
+      const host = document.getElementById('newsCardHost');
+      const unread = getUnreadNews();
+      updateNewsProgressUi();
+
+      if (unread.length === 0) {
+        currentNewsReelIds = [];
+        host.innerHTML = `
+          <div class="absolute inset-0 bg-white dark:bg-[#18262D] rounded-3xl border border-[#DCE3DF] dark:border-[#243740] shadow-sm p-8 flex flex-col items-center justify-center text-center">
+            <div class="w-10 h-10 rounded-full border-2 border-sky-600 border-t-transparent animate-spin mx-auto mb-3"></div>
+            <h3 class="text-base font-bold text-[#22333B] dark:text-[#EFF3F1] mb-1">Fetching world news flashcards...</h3>
+            <p class="text-xs sm:text-sm text-[#556B75] dark:text-[#9BB2AA] mb-4">Pulling current affairs &amp; global updates for your interests.</p>
+            <button type="button" id="retryNewsFetchBtn" class="px-4 py-2 rounded-xl bg-[#C7A17A] hover:bg-[#B89068] text-[#22333B] dark:bg-[#5E8B7E] dark:hover:bg-[#4F786C] dark:text-white text-xs font-semibold transition cursor-pointer">Load News Now</button>
+          </div>
+        `;
+        const retryBtn = document.getElementById('retryNewsFetchBtn');
+        if (retryBtn) retryBtn.addEventListener('click', () => loadMoreNews(5));
+        if (!isFetchingNews) loadMoreNews(5);
+        return;
+      }
+
+      if (state.newsIndex >= unread.length) state.newsIndex = 0;
+      if (state.newsIndex < 0) state.newsIndex = unread.length - 1;
+
+      const current = unread[state.newsIndex];
+      const next = unread.length > 1 ? unread[(state.newsIndex + 1) % unread.length] : null;
+      currentNewsReelIds = [current.id];
+
+      host.innerHTML = (next ? buildSwipeCardHtml(next, true) : '') + buildSwipeCardHtml(current, false);
+      attachSwipeHandlers(host.querySelector('.swipe-card'), 'news');
+
+      if (unread.length <= 3 && !isFetchingNews) {
+        loadMoreNews(5);
+      }
+    }
+
+    const REPUTABLE_DOMAINS = new Set([
+      'ign.com', 'nature.com', 'science.org', 'arstechnica.com', 'wired.com',
+      'theatlantic.com', 'newyorker.com', 'economist.com', 'bbc.com', 'bbc.co.uk',
+      'reuters.com', 'apnews.com', 'npr.org', 'nytimes.com', 'theguardian.com',
+      'technologyreview.com', 'scientificamerican.com', 'quantamagazine.org',
+      'nasa.gov', 'allure.com', 'vogue.com', 'rollingstone.com', 'pitchfork.com',
+      'hbr.org', 'smithsonianmag.com', 'aeon.co', 'nautil.us', 'spacenews.com'
+    ]);
+
+    function getDomainName(urlStr) {
+      try {
+        const host = new URL(urlStr).hostname.replace(/^www\./, '');
+        const parts = host.split('.');
+        const base = parts.length >= 2 ? parts.slice(-2).join('.') : host;
+        return { host, base };
+      } catch (e) {
+        return { host: '', base: '' };
+      }
+    }
+
+    function formatPubName(domainBase) {
+      const map = {
+        'ign.com': 'IGN', 'nature.com': 'Nature', 'science.org': 'Science',
+        'arstechnica.com': 'Ars Technica', 'wired.com': 'Wired', 'theatlantic.com': 'The Atlantic',
+        'newyorker.com': 'The New Yorker', 'economist.com': 'The Economist', 'bbc.com': 'BBC News',
+        'bbc.co.uk': 'BBC News', 'reuters.com': 'Reuters', 'apnews.com': 'AP News',
+        'npr.org': 'NPR', 'nytimes.com': 'The New York Times', 'theguardian.com': 'The Guardian',
+        'technologyreview.com': 'MIT Technology Review', 'scientificamerican.com': 'Scientific American',
+        'quantamagazine.org': 'Quanta Magazine', 'nasa.gov': 'NASA', 'allure.com': 'Allure',
+        'vogue.com': 'Vogue', 'rollingstone.com': 'Rolling Stone', 'pitchfork.com': 'Pitchfork',
+        'hbr.org': 'Harvard Business Review', 'smithsonianmag.com': 'Smithsonian Magazine',
+        'aeon.co': 'Aeon', 'nautil.us': 'Nautilus', 'spacenews.com': 'SpaceNews'
+      };
+      return map[domainBase] || domainBase;
+    }
+
+    async function fetchReputableArticles(query, matchedTopic, existingTitles, limit = 3, recentOnly = false) {
+      const endpoint = recentOnly ? 'search_by_date' : 'search';
+      const url = `https://hn.algolia.com/api/v1/${endpoint}?query=${encodeURIComponent(query)}&tags=story&hitsPerPage=20`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Algolia HTTP ' + res.status);
+      const data = await res.json();
+      const hits = Array.isArray(data.hits) ? data.hits : [];
+      const picked = [];
+      for (const h of hits) {
+        if (picked.length >= limit) break;
+        if (!h.title || !h.url || existingTitles.has(h.title.toLowerCase())) continue;
+        const { base } = getDomainName(h.url);
+        if (!REPUTABLE_DOMAINS.has(base)) continue;
+        existingTitles.add(h.title.toLowerCase());
+        const pub = formatPubName(base);
+        const dateStr = h.created_at ? h.created_at.slice(0, 10) : '';
+        picked.push({
+          id: 'rep-' + Date.now() + '-' + Math.floor(Math.random() * 10000),
+          topic: matchedTopic,
+          title: h.title,
+          insight: `Featured article from ${pub}${dateStr ? ' (' + dateStr + ')' : ''}. Open the verified publication link below to read the full reporting and expert analysis.`,
+          takeaway: `Published by ${pub} — tap the source link to read the full story.`,
+          bullets: [],
+          sourceTitle: pub,
+          author: h.author ? `Shared via ${pub} · ${dateStr}` : pub,
+          sourceUrl: h.url,
+          readMinutes: 2,
+          likes: Math.min(350, Math.max(25, h.points || 40)),
+          liked: false,
+          stashed: false,
+          read: false,
+          note: '',
+          isAuto: true
+        });
+      }
+      return picked;
+    }
+
+    async function fetchSpaceflightNews(existingTitles, limit = 5) {
+      const res = await fetch(`https://api.spaceflightnewsapi.net/v4/articles/?limit=15`);
+      if (!res.ok) throw new Error('SNAPI HTTP ' + res.status);
+      const data = await res.json();
+      const results = Array.isArray(data.results) ? data.results : [];
+      const picked = [];
+      for (const a of results) {
+        if (picked.length >= limit) break;
+        if (!a.title || !a.summary || existingTitles.has(a.title.toLowerCase())) continue;
+        existingTitles.add(a.title.toLowerCase());
+        const dateStr = a.published_at ? a.published_at.slice(0, 10) : '';
+        picked.push({
+          id: 'snapi-' + Date.now() + '-' + Math.floor(Math.random() * 10000),
+          topic: 'Health & Science',
+          title: a.title,
+          insight: trimExtract(a.summary, 270),
+          takeaway: `Reported by ${a.news_site || 'Science Press'}${dateStr ? ' on ' + dateStr : ''}.`,
+          bullets: [],
+          sourceTitle: a.news_site || 'Science & Space News',
+          author: dateStr || 'Current Affairs',
+          sourceUrl: a.url || '',
+          readMinutes: 1,
+          likes: Math.floor(45 + Math.random() * 90),
+          liked: false,
+          stashed: false,
+          read: false,
+          note: '',
+          isNews: true
+        });
+      }
+      return picked;
+    }
+
+    async function loadMoreNews(count = 5) {
+      if (isFetchingNews) return;
+      isFetchingNews = true;
+      try {
+        const existingTitles = new Set(state.news.map(n => n.title.toLowerCase()));
+        const added = [];
+        const newsPool = [
+          ...(state.newsInterests.keywords || []),
+          ...(state.newsInterests.topics || [])
+        ];
+
+        // 1. Reputable publication news matching user's News Interests
+        if (newsPool.length > 0) {
+          const kw = newsPool[Math.floor(Math.random() * newsPool.length)];
+          const matchedTopic = NEWS_TOPICS.find(t => t.toLowerCase().includes(kw.toLowerCase())) || toTitleCase(kw);
+          try {
+            const repNews = await fetchReputableArticles(kw, matchedTopic, existingTitles, Math.min(3, count), true);
+            repNews.forEach(item => {
+              item.isNews = true;
+              state.news.push(item);
+              added.push(item);
+            });
+          } catch (e) {}
+        }
+
+        // 2. Live Science & Space journalism from Spaceflight News API (NASA, Ars Technica, SpaceNews, etc.)
+        if (added.length < count) {
+          try {
+            const snItems = await fetchSpaceflightNews(existingTitles, count - added.length);
+            snItems.forEach(item => {
+              state.news.push(item);
+              added.push(item);
+            });
+          } catch (e) {}
+        }
+
+        // 3. Fallback: recent OpenAlex policy/economic/climate research
+        if (added.length < count) {
+          const fallbackKw = newsPool.length > 0 ? newsPool[0] : 'global climate economy';
+          try {
+            const oaNews = await fetchOpenAlexIdeas(fallbackKw, 'World Affairs', existingTitles, count - added.length);
+            oaNews.forEach(item => {
+              item.isNews = true;
+              state.news.push(item);
+              added.push(item);
+            });
+          } catch (e) {}
+        }
+
+        if (added.length > 0) {
+          saveState();
+          if (state.activeTab === 'news' && currentNewsReelIds.length === 0) renderNewsDeck();
+        }
+      } catch (err) {
+        // Silent fallback on offline
+      } finally {
+        isFetchingNews = false;
+      }
+    }
+
+    function renderAll() {
+      updateHeaderMetrics();
+      renderTabs();
+      renderTopics();
+      renderFeed();
+      if (state.activeTab === 'review') {
+        renderReviewDeck();
+      } else if (state.activeTab === 'news') {
+        renderNewsDeck();
+      } else if (state.activeTab === 'interests') {
+        renderInterestsTab();
+      }
+    }
+
+    document.addEventListener('click', e => {
+      const actionBtn = e.target.closest('.action-btn');
+      if (actionBtn) {
+        e.stopPropagation();
+        const { action, id } = actionBtn.dataset;
+        if (action === 'like') toggleLike(id);
+        if (action === 'stash') toggleStash(id);
+        if (action === 'copy') copyIdea(id);
+        return;
+      }
+
+      const card = e.target.closest('.idea-card');
+      if (card) {
+        openDetailModal(card.dataset.id);
+        return;
+      }
+
+      const tabBtn = e.target.closest('.tab-btn');
+      if (tabBtn) {
+        state.activeTab = tabBtn.dataset.tab;
+        renderAll();
+        return;
+      }
+
+      const topicBtn = e.target.closest('.topic-pill');
+      if (topicBtn) {
+        state.activeTopic = topicBtn.dataset.topic;
+        renderAll();
+      }
+    });
+
+    function syncSearch(val) {
+      state.searchQuery = val;
+      document.getElementById('searchInput').value = val;
+      renderTabs();
+      renderFeed();
+    }
+
+    document.getElementById('searchInput').addEventListener('input', e => syncSearch(e.target.value));
+
+    document.getElementById('sortSelect').addEventListener('change', e => {
+      state.sortBy = e.target.value;
+      renderFeed();
+    });
+
+    document.getElementById('emptyActionBtn').addEventListener('click', () => {
+      if (state.activeTab === 'stash' && !state.searchQuery && state.activeTopic === 'All') {
+        state.activeTab = 'discover';
+      } else {
+        state.activeTopic = 'All';
+        syncSearch('');
+      }
+      renderAll();
+    });
+
+
+
+
+    function trimExtract(text, maxLen = 260) {
+      if (!text) return '';
+      const clean = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      if (clean.length <= maxLen) return clean;
+      const cut = clean.slice(0, maxLen);
+      const lastDot = cut.lastIndexOf('.');
+      return (lastDot > 100 ? cut.slice(0, lastDot + 1) : cut.trim() + '...');
+    }
+
+    function reconstructOpenAlexAbstract(invIdx) {
+      if (!invIdx || typeof invIdx !== 'object') return '';
+      const words = [];
+      for (const [word, positions] of Object.entries(invIdx)) {
+        if (Array.isArray(positions)) {
+          for (const pos of positions) words[pos] = word;
+        }
+      }
+      return words.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+    }
+
+    async function fetchOpenAlexIdeas(query, matchedTopic, existingTitles, limit = 3) {
+      const url = `https://api.openalex.org/works?search=${encodeURIComponent(query)}&filter=has_abstract:true,language:en&sort=cited_by_count:desc&per-page=10`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('OpenAlex HTTP ' + res.status);
+      const data = await res.json();
+      const works = Array.isArray(data.results) ? data.results : [];
+      const picked = [];
+      for (const w of works) {
+        if (picked.length >= limit) break;
+        if (!w.title || existingTitles.has(w.title.toLowerCase())) continue;
+        const abs = reconstructOpenAlexAbstract(w.abstract_inverted_index);
+        if (!abs || abs.length < 80) continue;
+        existingTitles.add(w.title.toLowerCase());
+        const journal = (w.primary_location && w.primary_location.source && w.primary_location.source.display_name) || 'Peer-Reviewed Journal';
+        const firstAuthor = (w.authorships && w.authorships[0] && w.authorships[0].author && w.authorships[0].author.display_name) || 'Academic Research';
+        const year = w.publication_year ? ` (${w.publication_year})` : '';
+        const sourceUrl = w.doi || (w.primary_location && w.primary_location.landing_page_url) || w.id || '';
+        picked.push({
+          id: 'oa-' + Date.now() + '-' + Math.floor(Math.random() * 10000),
+          topic: matchedTopic ? (TOPIC_META[matchedTopic] ? matchedTopic : toTitleCase(matchedTopic)) : 'Live Discovery',
+          title: w.title,
+          insight: trimExtract(abs, 270),
+          takeaway: `Published in ${journal}${year}. Open the paper to inspect methodology and findings.`,
+          bullets: [],
+          sourceTitle: journal,
+          author: `${firstAuthor}${year}`,
+          sourceUrl,
+          readMinutes: 2,
+          likes: Math.min(350, Math.max(40, Math.floor((w.cited_by_count || 50) / 10))),
+          liked: false,
+          stashed: false,
+          read: false,
+          note: '',
+          isAuto: true
+        });
+      }
+      return picked;
+    }
+
+    async function fetchCrossrefIdeas(query, matchedTopic, existingTitles, limit = 3) {
+      const url = `https://api.crossref.org/works?query=${encodeURIComponent(query)}&filter=has-abstract:true&rows=8`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Crossref HTTP ' + res.status);
+      const data = await res.json();
+      const items = (data.message && Array.isArray(data.message.items)) ? data.message.items : [];
+      const picked = [];
+      for (const item of items) {
+        if (picked.length >= limit) break;
+        const title = Array.isArray(item.title) ? item.title[0] : item.title;
+        if (!title || existingTitles.has(title.toLowerCase())) continue;
+        const abs = trimExtract(item.abstract || '', 270);
+        if (!abs || abs.length < 70) continue;
+        existingTitles.add(title.toLowerCase());
+        const journal = (Array.isArray(item['container-title']) && item['container-title'][0]) || item.publisher || 'Academic Publication';
+        const authorObj = Array.isArray(item.author) ? item.author[0] : null;
+        const authorName = authorObj ? [authorObj.given, authorObj.family].filter(Boolean).join(' ') : 'Research Author';
+        picked.push({
+          id: 'cr-' + Date.now() + '-' + Math.floor(Math.random() * 10000),
+          topic: matchedTopic ? (TOPIC_META[matchedTopic] ? matchedTopic : toTitleCase(matchedTopic)) : 'Live Discovery',
+          title,
+          insight: abs,
+          takeaway: `Published by ${journal}. Open the DOI link to read the full study.`,
+          bullets: [],
+          sourceTitle: journal,
+          author: authorName,
+          sourceUrl: item.URL || (item.DOI ? 'https://doi.org/' + item.DOI : ''),
+          readMinutes: 2,
+          likes: Math.floor(45 + Math.random() * 110),
+          liked: false,
+          stashed: false,
+          read: false,
+          note: '',
+          isAuto: true
+        });
+      }
+      return picked;
+    }
+
+    async function loadMoreIdeas(count = 3) {
+      if (isFetchingMore) return;
+      isFetchingMore = true;
+      const btn = document.getElementById('loadMoreBtn');
+      const status = document.getElementById('infiniteStatus');
+      if (btn) btn.textContent = 'Discovering verified ideas...';
+      if (status) status.textContent = 'Pulling excerpts from peer-reviewed journals & reputable publications...';
+
+      try {
+        const pool = [
+          ...(state.ideaInterests.keywords || []),
+          ...(state.ideaInterests.topics || []).map(t => t.split('&')[0].trim())
+        ];
+        const fallbackTopics = ['neuroscience memory', 'behavioral economics', 'systems thinking', 'climate science', 'artificial intelligence', 'music cognition'];
+        const added = [];
+        const existingTitles = new Set(state.ideas.map(i => i.title.toLowerCase()));
+
+        const query = pool.length > 0
+          ? pool[Math.floor(Math.random() * pool.length)]
+          : fallbackTopics[Math.floor(Math.random() * fallbackTopics.length)];
+        const matchedTopic = (state.ideaInterests.topics || []).find(t => t.toLowerCase().includes(query.toLowerCase())) || toTitleCase(query);
+
+        // 1. OpenAlex peer-reviewed abstracts
+        try {
+          const oaItems = await fetchOpenAlexIdeas(query, matchedTopic, existingTitles, count);
+          oaItems.forEach(item => {
+            state.ideas.push(item);
+            added.push(item);
+          });
+        } catch (e) {}
+
+        // 2. Reputable magazines & media (IGN, Ars Technica, Wired, Nature, The Atlantic, etc.)
+        if (added.length < count) {
+          try {
+            const repItems = await fetchReputableArticles(query, matchedTopic, existingTitles, count - added.length, false);
+            repItems.forEach(item => {
+              state.ideas.push(item);
+              added.push(item);
+            });
+          } catch (e) {}
+        }
+
+        // 3. Crossref scholarly DOI registry
+        if (added.length < count) {
+          try {
+            const crItems = await fetchCrossrefIdeas(query, matchedTopic, existingTitles, count - added.length);
+            crItems.forEach(item => {
+              state.ideas.push(item);
+              added.push(item);
+            });
+          } catch (e) {}
+        }
+
+        if (added.length > 0) {
+          saveState();
+          renderFeed();
+          if (state.activeTab === 'review' && currentReelIds.length === 0) renderReviewDeck();
+          if (status) status.textContent = `Added ${added.length} verified cards · Scroll for more`;
+        } else if (status) {
+          status.textContent = 'Tap to discover more verified cards';
+        }
+      } catch (err) {
+        if (status) status.textContent = 'Offline or network blocked — tap to retry';
+      } finally {
+        isFetchingMore = false;
+        if (btn) btn.textContent = 'Load More Knowledge Cards';
+      }
+    }
+
+    document.getElementById('loadMoreBtn').addEventListener('click', () => loadMoreIdeas(3));
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && (state.activeTab === 'discover') && !state.searchQuery.trim()) {
+          loadMoreIdeas(3);
+        }
+      }, { rootMargin: '250px' });
+      observer.observe(document.getElementById('infiniteFooter'));
+    }
+
+
+
+    document.getElementById('closeDetailModal').addEventListener('click', closeDetailModal);
+    document.getElementById('detailModal').addEventListener('click', e => {
+      if (e.target.id === 'detailModal') closeDetailModal();
+    });
+
+    // Create Modal
+    function openCreateModal() {
+      const m = document.getElementById('createModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+    function closeCreateModal() {
+      const m = document.getElementById('createModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    document.querySelectorAll('.open-create-btn').forEach(btn => btn.addEventListener('click', openCreateModal));
+    document.querySelectorAll('.open-interests-tab-btn').forEach(btn => btn.addEventListener('click', () => {
+      state.activeTab = 'interests';
+      renderAll();
+      const input = document.getElementById('customIdeaInterestInput');
+      if (input) setTimeout(() => input.focus(), 50);
+    }));
+    document.getElementById('closeCreateModal').addEventListener('click', closeCreateModal);
+    document.getElementById('cancelCreateBtn').addEventListener('click', closeCreateModal);
+    document.getElementById('createModal').addEventListener('click', e => {
+      if (e.target.id === 'createModal') closeCreateModal();
+    });
+
+    document.getElementById('createIdeaForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const title = document.getElementById('ideaTitleInput').value.trim();
+      const topic = document.getElementById('ideaTopicInput').value;
+      const author = document.getElementById('ideaAuthorInput').value.trim();
+      const sourceUrl = document.getElementById('ideaUrlInput').value.trim();
+      const insight = document.getElementById('ideaInsightInput').value.trim();
+      const takeaway = document.getElementById('ideaTakeawayInput').value.trim();
+
+      if (!title || !author || !insight || !takeaway) return;
+
+      const newIdea = {
+        id: 'custom-' + Date.now(),
+        topic,
+        title,
+        insight,
+        takeaway,
+        bullets: [],
+        sourceTitle: 'Personal Note',
+        author,
+        sourceUrl,
+        readMinutes: 1,
+        likes: 1,
+        liked: true,
+        stashed: false,
+        read: false,
+        note: '',
+        isCustom: true
+      };
+
+      state.ideas.unshift(newIdea);
+      saveState();
+      syncCustomIdeaToCloud(newIdea);
+      syncCardStateToCloud(newIdea);
+      e.target.reset();
+      closeCreateModal();
+      state.activeTab = 'discover';
+      state.activeTopic = 'All';
+      showToast('New idea published & stashed!');
+      renderAll();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeDetailModal();
+        closeCreateModal();
+        closeAuthModal();
+      }
+      if ((state.activeTab === 'review' || state.activeTab === 'news') && document.getElementById('detailModal').classList.contains('hidden') && document.getElementById('createModal').classList.contains('hidden')) {
+        const isNewsTab = state.activeTab === 'news';
+        const activeList = isNewsTab ? getUnreadNews() : getUnreadFlashcards();
+        const activeIdx = isNewsTab ? state.newsIndex : state.reviewIndex;
+        const current = activeList[activeIdx];
+        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          stepDeck(isNewsTab ? 'news' : 'idea', 1);
+        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          stepDeck(isNewsTab ? 'news' : 'idea', -1);
+        } else if (current && e.key.toLowerCase() === 's') {
+          toggleStash(current.id);
+        } else if (e.key.toLowerCase() === 'l') {
+          toggleLike(current.id);
+        }
+      }
+    });
+
+    const THEME_KEY = 'ideastash_theme_v1';
+    function applyTheme(theme) {
+      const isDark = theme === 'dark';
+      document.documentElement.classList.toggle('dark', isDark);
+      document.getElementById('sunIcon').classList.toggle('hidden', !isDark);
+      document.getElementById('moonIcon').classList.toggle('hidden', isDark);
+      try {
+        localStorage.setItem(THEME_KEY, theme);
+      } catch (e) {}
+    }
+
+    function initTheme() {
+      let saved = null;
+      try {
+        saved = localStorage.getItem(THEME_KEY);
+      } catch (e) {}
+      if (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        saved = 'dark';
+      }
+      applyTheme(saved === 'dark' ? 'dark' : 'light');
+    }
+
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      applyTheme(isDark ? 'light' : 'dark');
+    });
+
+
+
+    document.getElementById('followSearchBtn').addEventListener('click', () => {
+      const q = state.searchQuery.trim();
+      if (!q) return;
+      if (!state.ideaInterests.keywords.some(k => k.toLowerCase() === q.toLowerCase())) {
+        state.ideaInterests.keywords.push(q);
+        saveState();
+        showToast(`Added "${q}" to Idea Interests`);
+        renderAll();
+      }
+    });
+
+    async function fetchCardsForCustomTopic(topicQuery, count = 3) {
+      const existingTitles = new Set(state.ideas.map(i => i.title.toLowerCase()));
+      const label = toTitleCase(topicQuery);
+      let added = 0;
+      try {
+        const repItems = await fetchReputableArticles(topicQuery, label, existingTitles, Math.min(2, count), false);
+        repItems.forEach(item => {
+          state.ideas.unshift(item);
+          added += 1;
+        });
+      } catch (e) {}
+      if (added < count) {
+        try {
+          const oaItems = await fetchOpenAlexIdeas(topicQuery, label, existingTitles, count - added);
+          oaItems.forEach(item => {
+            state.ideas.unshift(item);
+            added += 1;
+          });
+        } catch (e) {}
+      }
+      if (added < count) {
+        try {
+          const crItems = await fetchCrossrefIdeas(topicQuery, label, existingTitles, count - added);
+          crItems.forEach(item => {
+            state.ideas.unshift(item);
+            added += 1;
+          });
+        } catch (e) {}
+      }
+      if (added > 0) {
+        saveState();
+        renderAll();
+      }
+    }
+
+    document.getElementById('addIdeaInterestForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const input = document.getElementById('customIdeaInterestInput');
+      const val = input.value.trim();
+      if (!val) return;
+      if (!state.ideaInterests.keywords.some(k => k.toLowerCase() === val.toLowerCase())) {
+        state.ideaInterests.keywords.push(val);
+        saveState();
+        syncInterestsToCloud();
+        renderInterestsTab();
+        fetchCardsForCustomTopic(val, 3);
+        showToast(`Added "${toTitleCase(val)}" · Fetching cards...`);
+      }
+      input.value = '';
+    });
+
+    document.getElementById('addNewsInterestForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const input = document.getElementById('customNewsInterestInput');
+      const val = input.value.trim();
+      if (!val) return;
+      if (!state.newsInterests.keywords.some(k => k.toLowerCase() === val.toLowerCase())) {
+        state.newsInterests.keywords.push(val);
+        saveState();
+        syncInterestsToCloud();
+        renderInterestsTab();
+        showToast(`Added "${val}" to News Interests`);
+      }
+      input.value = '';
+    });
+
+    document.getElementById('interestsSection').addEventListener('click', e => {
+      const ideaTopicBtn = e.target.closest('.idea-interest-topic-btn');
+      if (ideaTopicBtn) {
+        const topic = ideaTopicBtn.dataset.ideaTopic;
+        const idx = state.ideaInterests.topics.indexOf(topic);
+        if (idx >= 0) state.ideaInterests.topics.splice(idx, 1);
+        else state.ideaInterests.topics.push(topic);
+        saveState();
+        syncInterestsToCloud();
+        renderInterestsTab();
+        return;
+      }
+      const remIdeaKw = e.target.closest('.remove-idea-kw-btn');
+      if (remIdeaKw) {
+        const kw = remIdeaKw.dataset.removeIdeaKw;
+        state.ideaInterests.keywords = state.ideaInterests.keywords.filter(k => k !== kw);
+        saveState();
+        syncInterestsToCloud();
+        renderInterestsTab();
+        return;
+      }
+      const newsTopicBtn = e.target.closest('.news-interest-topic-btn');
+      if (newsTopicBtn) {
+        const topic = newsTopicBtn.dataset.newsTopic;
+        const idx = state.newsInterests.topics.indexOf(topic);
+        if (idx >= 0) state.newsInterests.topics.splice(idx, 1);
+        else state.newsInterests.topics.push(topic);
+        saveState();
+        syncInterestsToCloud();
+        renderInterestsTab();
+        return;
+      }
+      const remNewsKw = e.target.closest('.remove-news-kw-btn');
+      if (remNewsKw) {
+        const kw = remNewsKw.dataset.removeNewsKw;
+        state.newsInterests.keywords = state.newsInterests.keywords.filter(k => k !== kw);
+        saveState();
+        syncInterestsToCloud();
+        renderInterestsTab();
+      }
+    });
+
+    document.getElementById('reviewUpBtn').addEventListener('click', () => stepDeck('idea', -1));
+    document.getElementById('reviewDownBtn').addEventListener('click', () => stepDeck('idea', 1));
+    document.getElementById('newsUpBtn').addEventListener('click', () => stepDeck('news', -1));
+    document.getElementById('newsDownBtn').addEventListener('click', () => stepDeck('news', 1));
+
+    let lastWheelStepTime = 0;
+    function attachWheelDeckListener(hostId, mode) {
+      const host = document.getElementById(hostId);
+      if (!host) return;
+      host.addEventListener('wheel', e => {
+        if (Math.abs(e.deltaY) < 15) return;
+        const scrollable = e.target.closest('.overflow-y-auto');
+        if (scrollable && scrollable.scrollHeight > scrollable.clientHeight + 2) {
+          const atTop = scrollable.scrollTop <= 1;
+          const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 2;
+          if ((e.deltaY < 0 && !atTop) || (e.deltaY > 0 && !atBottom)) {
+            return;
+          }
+        }
+        e.preventDefault();
+        const now = Date.now();
+        if (isAnimatingSwipe || now - lastWheelStepTime < 420) return;
+        lastWheelStepTime = now;
+        stepDeck(mode, e.deltaY > 0 ? 1 : -1);
+      }, { passive: false });
+    }
+    attachWheelDeckListener('reviewCardHost', 'idea');
+    attachWheelDeckListener('newsCardHost', 'news');
+
+    function openAuthModal() {
+      updateAuthUi();
+      const m = document.getElementById('authModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+    function closeAuthModal() {
+      const m = document.getElementById('authModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+    function setAuthMode(mode) {
+      authMode = mode;
+      const inBtn = document.getElementById('authModeSignInBtn');
+      const upBtn = document.getElementById('authModeSignUpBtn');
+      const subBtn = document.getElementById('authSubmitBtn');
+      const titleEl = document.getElementById('authModalTitle');
+      const userGroup = document.getElementById('authUsernameGroup');
+      const userInput = document.getElementById('authUsernameInput');
+      if (mode === 'signin') {
+        inBtn.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-[#18262D] text-[#22333B] dark:text-[#EFF3F1] shadow-xs transition cursor-pointer';
+        upBtn.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold text-[#556B75] dark:text-[#9BB2AA] transition cursor-pointer';
+        subBtn.textContent = 'Sign In';
+        titleEl.textContent = 'Sign in to IdeaShots';
+        if (userGroup) userGroup.classList.add('hidden');
+        if (userInput) userInput.required = false;
+      } else {
+        upBtn.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-[#18262D] text-[#22333B] dark:text-[#EFF3F1] shadow-xs transition cursor-pointer';
+        inBtn.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold text-[#556B75] dark:text-[#9BB2AA] transition cursor-pointer';
+        subBtn.textContent = 'Create Account';
+        titleEl.textContent = 'Create IdeaShots Account';
+        if (userGroup) userGroup.classList.remove('hidden');
+        if (userInput) userInput.required = true;
+      }
+    }
+
+    document.getElementById('authBtn').addEventListener('click', openAuthModal);
+    document.getElementById('closeAuthModal').addEventListener('click', closeAuthModal);
+    document.getElementById('authModal').addEventListener('click', e => {
+      if (e.target.id === 'authModal') closeAuthModal();
+    });
+    document.getElementById('authModeSignInBtn').addEventListener('click', () => setAuthMode('signin'));
+    document.getElementById('authModeSignUpBtn').addEventListener('click', () => setAuthMode('signup'));
+
+    async function signInWithOAuthProvider(provider) {
+      if (!sbClient) return;
+      const msg = document.getElementById('authMessage');
+      msg.classList.add('hidden');
+      try {
+        const redirectTo = window.location.origin + window.location.pathname;
+        const { error } = await sbClient.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo }
+        });
+        if (error) {
+          msg.textContent = error.message;
+          msg.className = 'text-xs rounded-xl px-3 py-2 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
+          msg.classList.remove('hidden');
+        }
+      } catch (err) {
+        msg.textContent = 'Could not start ' + provider + ' sign-in.';
+        msg.className = 'text-xs rounded-xl px-3 py-2 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
+        msg.classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('googleSignInBtn').addEventListener('click', () => signInWithOAuthProvider('google'));
+
+    document.getElementById('authForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!sbClient) return;
+      const username = (document.getElementById('authUsernameInput').value || '').trim();
+      const email = document.getElementById('authEmailInput').value.trim();
+      const password = document.getElementById('authPasswordInput').value;
+      const msg = document.getElementById('authMessage');
+      const subBtn = document.getElementById('authSubmitBtn');
+      msg.classList.add('hidden');
+      subBtn.disabled = true;
+
+      try {
+        const res = authMode === 'signin'
+          ? await sbClient.auth.signInWithPassword({ email, password })
+          : await sbClient.auth.signUp({ email, password, options: { data: { username } } });
+
+        if (res.error) {
+          msg.textContent = res.error.message;
+          msg.className = 'text-xs rounded-xl px-3 py-2 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
+          msg.classList.remove('hidden');
+        } else if (authMode === 'signup' && !res.data.session) {
+          msg.textContent = 'Check your email to confirm your account, then sign in.';
+          msg.className = 'text-xs rounded-xl px-3 py-2 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
+          msg.classList.remove('hidden');
+        } else {
+          currentUser = res.data.user;
+          updateAuthUi();
+          closeAuthModal();
+          showToast('Signed in · Syncing...');
+          await loadFromCloud();
+        }
+      } catch (err) {
+        msg.textContent = 'Network error. Please try again.';
+        msg.className = 'text-xs rounded-xl px-3 py-2 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
+        msg.classList.remove('hidden');
+      } finally {
+        subBtn.disabled = false;
+      }
+    });
+
+    document.getElementById('authSyncNowBtn').addEventListener('click', async () => {
+      await loadFromCloud();
+      showToast('Synced with cloud');
+    });
+
+    document.getElementById('authSignOutBtn').addEventListener('click', async () => {
+      if (!sbClient) return;
+      try {
+        await sbClient.auth.signOut();
+      } catch (e) {}
+      currentUser = null;
+      loadState();
+      updateAuthUi();
+      renderAll();
+      closeAuthModal();
+      showToast('Signed out');
+    });
+
+    if (sbClient) {
+      sbClient.auth.getSession().then(({ data }) => {
+        if (data && data.session && data.session.user) {
+          currentUser = data.session.user;
+          updateAuthUi();
+          loadFromCloud();
+        }
+      }).catch(() => {});
+
+      sbClient.auth.onAuthStateChange((event, session) => {
+        currentUser = (session && session.user) ? session.user : null;
+        updateAuthUi();
+        if (event === 'SIGNED_IN' && currentUser) {
+          loadFromCloud();
+        }
+      });
+    }
+
+    function renderWelcomeInterestsModal() {
+      document.getElementById('welcomeIdeaTopicsList').innerHTML = IDEA_TOPICS.map(topic => {
+        const active = state.ideaInterests.topics.includes(topic);
+        const cls = active
+          ? 'bg-[#C7A17A] text-[#22333B] border-[#C7A17A] dark:bg-[#5E8B7E] dark:text-white dark:border-[#5E8B7E]'
+          : 'bg-white dark:bg-[#142026] text-gray-700 dark:text-gray-300 border-gray-300 dark:border-[#2A404A] hover:border-indigo-400';
+        return `<button type="button" data-welcome-idea="${escapeHtml(topic)}" class="welcome-idea-btn px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${cls}">${active ? '&#10003; ' : '+ '}${escapeHtml(topic)}</button>`;
+      }).join('');
+
+      const wKwHost = document.getElementById('welcomeCustomKeywordsList');
+      if (wKwHost) {
+        const kws = state.ideaInterests.keywords || [];
+        wKwHost.innerHTML = kws.map(kw => `
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#C7A17A]/20 text-[#6E4F2F] dark:bg-[#5E8B7E]/25 dark:text-[#B8DCD0]">
+            <span>${escapeHtml(toTitleCase(kw))}</span>
+            <button type="button" data-w-remove-kw="${escapeHtml(kw)}" class="w-remove-kw-btn hover:text-rose-600 cursor-pointer">&times;</button>
+          </span>
+        `).join('');
+      }
+
+      document.getElementById('welcomeNewsTopicsList').innerHTML = NEWS_TOPICS.map(topic => {
+        const active = state.newsInterests.topics.includes(topic);
+        const cls = active
+          ? 'bg-[#C7A17A] text-[#22333B] border-[#C7A17A] dark:bg-[#5E8B7E] dark:text-white dark:border-[#5E8B7E]'
+          : 'bg-white dark:bg-[#142026] text-gray-700 dark:text-gray-300 border-gray-300 dark:border-[#2A404A] hover:border-sky-400';
+        return `<button type="button" data-welcome-news="${escapeHtml(topic)}" class="welcome-news-btn px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${cls}">${active ? '&#10003; ' : '+ '}${escapeHtml(topic)}</button>`;
+      }).join('');
+    }
+
+    function openWelcomeInterestsModal() {
+      renderWelcomeInterestsModal();
+      const uGroup = document.getElementById('welcomeUsernameGroup');
+      const uInput = document.getElementById('welcomeUsernameInput');
+      const existingName = currentUser && currentUser.user_metadata && currentUser.user_metadata.username;
+      if (uGroup && uInput) {
+        if (existingName && existingName.trim()) {
+          uGroup.classList.add('hidden');
+        } else {
+          uGroup.classList.remove('hidden');
+          uInput.value = '';
+        }
+      }
+      const m = document.getElementById('welcomeInterestsModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeWelcomeInterestsModal() {
+      const m = document.getElementById('welcomeInterestsModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+      if (currentUser) {
+        try { localStorage.setItem('ideashots_onboarded_' + currentUser.id, '1'); } catch (e) {}
+      }
+    }
+
+    document.getElementById('welcomeInterestsModal').addEventListener('click', e => {
+      if (e.target.id === 'welcomeInterestsModal') {
+        closeWelcomeInterestsModal();
+        return;
+      }
+      const ideaBtn = e.target.closest('.welcome-idea-btn');
+      if (ideaBtn) {
+        const t = ideaBtn.dataset.welcomeIdea;
+        const idx = state.ideaInterests.topics.indexOf(t);
+        if (idx >= 0) state.ideaInterests.topics.splice(idx, 1);
+        else state.ideaInterests.topics.push(t);
+        renderWelcomeInterestsModal();
+        return;
+      }
+      const remKw = e.target.closest('.w-remove-kw-btn');
+      if (remKw) {
+        const kw = remKw.dataset.wRemoveKw;
+        state.ideaInterests.keywords = state.ideaInterests.keywords.filter(k => k !== kw);
+        renderWelcomeInterestsModal();
+        return;
+      }
+      const newsBtn = e.target.closest('.welcome-news-btn');
+      if (newsBtn) {
+        const t = newsBtn.dataset.welcomeNews;
+        const idx = state.newsInterests.topics.indexOf(t);
+        if (idx >= 0) state.newsInterests.topics.splice(idx, 1);
+        else state.newsInterests.topics.push(t);
+        renderWelcomeInterestsModal();
+      }
+    });
+
+    document.getElementById('welcomeCustomTopicForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const input = document.getElementById('welcomeCustomTopicInput');
+      const val = input.value.trim();
+      if (!val) return;
+      if (!state.ideaInterests.keywords.some(k => k.toLowerCase() === val.toLowerCase())) {
+        state.ideaInterests.keywords.push(val);
+        renderWelcomeInterestsModal();
+        fetchCardsForCustomTopic(val, 3);
+      }
+      input.value = '';
+    });
+
+    document.getElementById('closeWelcomeInterestsModal').addEventListener('click', closeWelcomeInterestsModal);
+    document.getElementById('skipWelcomeInterestsBtn').addEventListener('click', closeWelcomeInterestsModal);
+    document.getElementById('saveWelcomeInterestsBtn').addEventListener('click', async () => {
+      const uInput = document.getElementById('welcomeUsernameInput');
+      const preferred = uInput ? uInput.value.trim() : '';
+      if (preferred && sbClient && currentUser) {
+        try {
+          const { data } = await sbClient.auth.updateUser({ data: { username: preferred } });
+          if (data && data.user) currentUser = data.user;
+          updateAuthUi();
+        } catch (e) {}
+      }
+      saveState();
+      syncInterestsToCloud();
+      state.reviewIndex = 0;
+      state.newsIndex = 0;
+      closeWelcomeInterestsModal();
+      renderAll();
+      if ((state.ideaInterests.topics || []).length > 0 && !isFetchingMore) loadMoreIdeas(3);
+      if ((state.newsInterests.topics || []).length > 0 && !isFetchingNews) loadMoreNews(3);
+      showToast('Preferences saved!');
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && sbClient && currentUser) {
+        loadFromCloud();
+      }
+    });
+
+    initTheme();
+    loadState();
+    renderAll();
+  </script>
+</body>
+</html>
